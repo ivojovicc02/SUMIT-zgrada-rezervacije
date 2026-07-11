@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/views/admin/public/HomeView.vue",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783782351999,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783782351999,
+            "name": "Commit-0",
+            "content": "\r\n\r\n\r\n"
+        }
+    ]
+}

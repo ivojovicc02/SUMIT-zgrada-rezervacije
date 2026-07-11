@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/views/public/HomeView.vue",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783782501851,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783782501851,
+            "name": "Commit-0",
+            "content": "<template>\r\n  <main class=\"home-page\">\r\n    <h1>SUMIT rezervacije</h1>\r\n    <p>Javna početna stranica sustava.</p>\r\n\r\n    <RouterLink to=\"/admin/login\">\r\n      Administratorska prijava\r\n    </RouterLink>\r\n  </main>\r\n</template>\r\n\r\n<style scoped>\r\n.home-page {\r\n  padding: 40px;\r\n}\r\n</style>"
+        }
+    ]
+}

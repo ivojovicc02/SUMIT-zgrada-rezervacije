@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/views/admin/AdminLoginView.vue",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783782528965,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783782528965,
+            "name": "Commit-0",
+            "content": "<script setup>\r\nimport { ref } from 'vue'\r\nimport { useRouter } from 'vue-router'\r\n\r\nconst router = useRouter()\r\n\r\nconst email = ref('')\r\nconst password = ref('')\r\nconst errorMessage = ref('')\r\n\r\nconst handleLogin = () => {\r\n  if (!email.value || !password.value) {\r\n    errorMessage.value = 'Unesite e-mail i lozinku.'\r\n    return\r\n  }\r\n\r\n  // Privremeno dok backend autentikacija nije povezana.\r\n  localStorage.setItem('admin_token', 'temporary-admin-token')\r\n\r\n  router.push({ name: 'admin-dashboard' })\r\n}\r\n</script>\r\n\r\n<template>\r\n  <main class=\"login-page\">\r\n    <form class=\"login-card\" @submit.prevent=\"handleLogin\">\r\n      <div>\r\n        <p class=\"subtitle\">SUMIT centar</p>\r\n        <h1>Administratorska prijava</h1>\r\n        <p>Prijavite se za upravljanje rezervacijama i prostorima.</p>\r\n      </div>\r\n\r\n      <label>\r\n        E-mail\r\n        <input\r\n          v-model=\"email\"\r\n          type=\"email\"\r\n          placeholder=\"admin@sumit.ba\"\r\n        />\r\n      </label>\r\n\r\n      <label>\r\n        Lozinka\r\n        <input\r\n          v-model=\"password\"\r\n          type=\"password\"\r\n          placeholder=\"Unesite lozinku\"\r\n        />\r\n      </label>\r\n\r\n      <p v-if=\"errorMessage\" class=\"error\">\r\n        {{ errorMessage }}\r\n      </p>\r\n\r\n      <button type=\"submit\">\r\n        Prijavi se\r\n      </button>\r\n    </form>\r\n  </main>\r\n</template>\r\n\r\n<style scoped>\r\n.login-page {\r\n  min-height: 100vh;\r\n  display: grid;\r\n  place-items: center;\r\n  padding: 24px;\r\n  background: #f4f6f8;\r\n}\r\n\r\n.login-card {\r\n  width: min(100%, 420px);\r\n  display: grid;\r\n  gap: 20px;\r\n  padding: 32px;\r\n  background: white;\r\n  border-radius: 14px;\r\n  box-shadow: 0 12px 35px rgb(0 0 0 / 8%);\r\n}\r\n\r\n.subtitle {\r\n  margin: 0;\r\n  font-weight: 700;\r\n}\r\n\r\nh1 {\r\n  margin: 6px 0;\r\n}\r\n\r\nlabel {\r\n  display: grid;\r\n  gap: 8px;\r\n  font-weight: 600;\r\n}\r\n\r\ninput {\r\n  padding: 12px;\r\n  border: 1px solid #ccd2d8;\r\n  border-radius: 8px;\r\n  font: inherit;\r\n}\r\n\r\nbutton {\r\n  padding: 12px;\r\n  border: 0;\r\n  border-radius: 8px;\r\n  cursor: pointer;\r\n  font: inherit;\r\n  font-weight: 700;\r\n}\r\n\r\n.error {\r\n  margin: 0;\r\n}\r\n</style>"
+        }
+    ]
+}

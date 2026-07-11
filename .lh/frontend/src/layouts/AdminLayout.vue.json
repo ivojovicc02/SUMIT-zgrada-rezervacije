@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/layouts/AdminLayout.vue",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783782579324,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783782579324,
+            "name": "Commit-0",
+            "content": "<script setup>\r\nimport { useRouter } from 'vue-router'\r\n\r\nconst router = useRouter()\r\n\r\nconst handleLogout = () => {\r\n  localStorage.removeItem('admin_token')\r\n  router.push({ name: 'admin-login' })\r\n}\r\n</script>\r\n\r\n<template>\r\n  <div class=\"admin-layout\">\r\n    <aside class=\"sidebar\">\r\n      <div>\r\n        <h2>SUMIT Admin</h2>\r\n\r\n        <nav>\r\n          <RouterLink :to=\"{ name: 'admin-dashboard' }\">\r\n            Pregled\r\n          </RouterLink>\r\n\r\n          <RouterLink :to=\"{ name: 'admin-spaces' }\">\r\n            Prostori\r\n          </RouterLink>\r\n\r\n          <RouterLink :to=\"{ name: 'admin-reservations' }\">\r\n            Rezervacije\r\n          </RouterLink>\r\n\r\n          <RouterLink :to=\"{ name: 'admin-reports' }\">\r\n            Izvještaji\r\n          </RouterLink>\r\n        </nav>\r\n      </div>\r\n\r\n      <button type=\"button\" @click=\"handleLogout\">\r\n        Odjava\r\n      </button>\r\n    </aside>\r\n\r\n    <div class=\"admin-content\">\r\n      <header class=\"topbar\">\r\n        <h1>Administratorsko sučelje</h1>\r\n      </header>\r\n\r\n      <main class=\"page-content\">\r\n        <RouterView />\r\n      </main>\r\n    </div>\r\n  </div>\r\n</template>\r\n\r\n<style scoped>\r\n.admin-layout {\r\n  min-height: 100vh;\r\n  display: grid;\r\n  grid-template-columns: 240px 1fr;\r\n  background: #f4f6f8;\r\n}\r\n\r\n.sidebar {\r\n  display: flex;\r\n  flex-direction: column;\r\n  justify-content: space-between;\r\n  padding: 24px;\r\n  background: #ffffff;\r\n  border-right: 1px solid #e3e7eb;\r\n}\r\n\r\n.sidebar h2 {\r\n  margin-top: 0;\r\n}\r\n\r\nnav {\r\n  display: grid;\r\n  gap: 8px;\r\n  margin-top: 32px;\r\n}\r\n\r\nnav a {\r\n  padding: 11px 12px;\r\n  color: inherit;\r\n  text-decoration: none;\r\n  border-radius: 8px;\r\n}\r\n\r\nnav a.router-link-active {\r\n  background: #e8edf3;\r\n  font-weight: 700;\r\n}\r\n\r\n.sidebar button {\r\n  padding: 10px;\r\n  cursor: pointer;\r\n}\r\n\r\n.admin-content {\r\n  min-width: 0;\r\n}\r\n\r\n.topbar {\r\n  padding: 20px 28px;\r\n  background: white;\r\n  border-bottom: 1px solid #e3e7eb;\r\n}\r\n\r\n.topbar h1 {\r\n  margin: 0;\r\n  font-size: 20px;\r\n}\r\n\r\n.page-content {\r\n  padding: 28px;\r\n}\r\n\r\n@media (max-width: 768px) {\r\n  .admin-layout {\r\n    grid-template-columns: 1fr;\r\n  }\r\n\r\n  .sidebar {\r\n    gap: 20px;\r\n    border-right: 0;\r\n    border-bottom: 1px solid #e3e7eb;\r\n  }\r\n\r\n  nav {\r\n    grid-template-columns: repeat(2, 1fr);\r\n  }\r\n}\r\n</style>"
+        }
+    ]
+}

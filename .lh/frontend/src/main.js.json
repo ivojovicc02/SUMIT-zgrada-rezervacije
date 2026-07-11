@@ -1,0 +1,22 @@
+{
+    "sourceFile": "frontend/src/main.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1783782238339,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783782690287,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,9 @@\n import { createApp } from 'vue'\r\n import App from './App.vue'\r\n+import router from './router'\r\n+import './style.css'\r\n \r\n-createApp(App).mount('#app')\r\n+const app = createApp(App)\r\n+\r\n+app.use(router)\r\n+app.mount('#app')\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1783782238339,
+            "name": "Commit-0",
+            "content": "import { createApp } from 'vue'\r\nimport App from './App.vue'\r\n\r\ncreateApp(App).mount('#app')\r\n"
+        }
+    ]
+}

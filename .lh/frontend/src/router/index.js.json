@@ -1,0 +1,18 @@
+{
+    "sourceFile": "frontend/src/router/index.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783782672305,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783782672305,
+            "name": "Commit-0",
+            "content": "import { createRouter, createWebHistory } from 'vue-router'\r\n\r\nimport HomeView from '../views/public/HomeView.vue'\r\nimport AdminLoginView from '../views/admin/AdminLoginView.vue'\r\nimport AdminLayout from '../layouts/AdminLayout.vue'\r\nimport AdminDashboardView from '../views/admin/AdminDashboardView.vue'\r\nimport AdminSpacesView from '../views/admin/AdminSpacesView.vue'\r\nimport AdminReservationsView from '../views/admin/AdminReservationsView.vue'\r\nimport AdminReportsView from '../views/admin/AdminReportsView.vue'\r\n\r\nconst routes = [\r\n  // JAVNI DIO\r\n  // Kolega kasnije ovdje može dodati svoje rute.\r\n  {\r\n    path: '/',\r\n    name: 'home',\r\n    component: HomeView,\r\n  },\r\n\r\n  // ADMIN LOGIN\r\n  {\r\n    path: '/admin/login',\r\n    name: 'admin-login',\r\n    component: AdminLoginView,\r\n    meta: {\r\n      guestOnly: true,\r\n    },\r\n  },\r\n\r\n  // ADMIN DIO\r\n  {\r\n    path: '/admin',\r\n    component: AdminLayout,\r\n    meta: {\r\n      requiresAdmin: true,\r\n    },\r\n    children: [\r\n      {\r\n        path: '',\r\n        name: 'admin-dashboard',\r\n        component: AdminDashboardView,\r\n      },\r\n      {\r\n        path: 'prostori',\r\n        name: 'admin-spaces',\r\n        component: AdminSpacesView,\r\n      },\r\n      {\r\n        path: 'rezervacije',\r\n        name: 'admin-reservations',\r\n        component: AdminReservationsView,\r\n      },\r\n      {\r\n        path: 'izvjestaji',\r\n        name: 'admin-reports',\r\n        component: AdminReportsView,\r\n      },\r\n    ],\r\n  },\r\n\r\n  // Nepostojeća ruta vraća korisnika na početnu.\r\n  {\r\n    path: '/:pathMatch(.*)*',\r\n    redirect: '/',\r\n  },\r\n]\r\n\r\nconst router = createRouter({\r\n  history: createWebHistory(),\r\n  routes,\r\n})\r\n\r\nrouter.beforeEach((to) => {\r\n  const isAdminLoggedIn = Boolean(\r\n    localStorage.getItem('admin_token'),\r\n  )\r\n\r\n  if (to.meta.requiresAdmin && !isAdminLoggedIn) {\r\n    return {\r\n      name: 'admin-login',\r\n      query: {\r\n        redirect: to.fullPath,\r\n      },\r\n    }\r\n  }\r\n\r\n  if (to.meta.guestOnly && isAdminLoggedIn) {\r\n    return {\r\n      name: 'admin-dashboard',\r\n    }\r\n  }\r\n\r\n  return true\r\n})\r\n\r\nexport default router"
+        }
+    ]
+}
