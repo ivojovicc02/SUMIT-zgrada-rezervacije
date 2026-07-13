@@ -1,0 +1,34 @@
+{
+    "sourceFile": "frontend/src/services/api.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 4,
+            "patches": [
+                {
+                    "date": 1783927134364,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783927201049,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -0,0 +1,11 @@\n+import axios from 'axios'\r\n+\r\n+const api = axios.create({\r\n+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',\r\n+  withCredentials: true,\r\n+  headers: {\r\n+    'Content-Type': 'application/json',\r\n+  },\r\n+})\r\n+\r\n+export default api\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1783929433897,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,11 +1,57 @@\n-import axios from 'axios'\r\n+žimport axios from 'axios'\r\n \r\n const api = axios.create({\r\n-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',\r\n-  withCredentials: true,\r\n+  baseURL:\r\n+    import.meta.env.VITE_API_URL ||\r\n+    'http://127.0.0.1:8000',\r\n   headers: {\r\n-    'Content-Type': 'application/json',\r\n+    Accept: 'application/json',\r\n   },\r\n })\r\n \r\n+api.interceptors.request.use(\r\n+  (config) => {\r\n+    const token = localStorage.getItem('admin_token')\r\n+\r\n+    if (token) {\r\n+      config.headers.Authorization = `Bearer ${token}`\r\n+    }\r\n+\r\n+    return config\r\n+  },\r\n+  (error) => Promise.reject(error),\r\n+)\r\n+\r\n+api.interceptors.response.use(\r\n+  (response) => response,\r\n+  (error) => {\r\n+    if (error.response?.status === 401) {\r\n+      localStorage.removeItem('admin_token')\r\n+\r\n+      /*\r\n+       * Ne preusmjeravamo tijekom samog login zahtjeva,\r\n+       * jer 401 na loginu znači pogrešne podatke.\r\n+       */\r\n+      const isLoginRequest =\r\n+        error.config?.url === '/admin/login'\r\n+\r\n+      const isOnAdminPage =\r\n+        window.location.pathname.startsWith('/admin')\r\n+\r\n+      const isOnLoginPage =\r\n+        window.location.pathname === '/admin/login'\r\n+\r\n+      if (\r\n+        !isLoginRequest &&\r\n+        isOnAdminPage &&\r\n+        !isOnLoginPage\r\n+      ) {\r\n+        window.location.replace('/admin/login')\r\n+      }\r\n+    }\r\n+\r\n+    return Promise.reject(error)\r\n+  },\r\n+)\r\n+\r\n export default api\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1783929442578,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,57 +0,0 @@\n-žimport axios from 'axios'\r\n-\r\n-const api = axios.create({\r\n-  baseURL:\r\n-    import.meta.env.VITE_API_URL ||\r\n-    'http://127.0.0.1:8000',\r\n-  headers: {\r\n-    Accept: 'application/json',\r\n-  },\r\n-})\r\n-\r\n-api.interceptors.request.use(\r\n-  (config) => {\r\n-    const token = localStorage.getItem('admin_token')\r\n-\r\n-    if (token) {\r\n-      config.headers.Authorization = `Bearer ${token}`\r\n-    }\r\n-\r\n-    return config\r\n-  },\r\n-  (error) => Promise.reject(error),\r\n-)\r\n-\r\n-api.interceptors.response.use(\r\n-  (response) => response,\r\n-  (error) => {\r\n-    if (error.response?.status === 401) {\r\n-      localStorage.removeItem('admin_token')\r\n-\r\n-      /*\r\n-       * Ne preusmjeravamo tijekom samog login zahtjeva,\r\n-       * jer 401 na loginu znači pogrešne podatke.\r\n-       */\r\n-      const isLoginRequest =\r\n-        error.config?.url === '/admin/login'\r\n-\r\n-      const isOnAdminPage =\r\n-        window.location.pathname.startsWith('/admin')\r\n-\r\n-      const isOnLoginPage =\r\n-        window.location.pathname === '/admin/login'\r\n-\r\n-      if (\r\n-        !isLoginRequest &&\r\n-        isOnAdminPage &&\r\n-        !isOnLoginPage\r\n-      ) {\r\n-        window.location.replace('/admin/login')\r\n-      }\r\n-    }\r\n-\r\n-    return Promise.reject(error)\r\n-  },\r\n-)\r\n-\r\n-export default api\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1783929461225,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -0,0 +1,57 @@\n+import axios from 'axios'\r\n+\r\n+const api = axios.create({\r\n+  baseURL:\r\n+    import.meta.env.VITE_API_URL ||\r\n+    'http://127.0.0.1:8000',\r\n+  headers: {\r\n+    Accept: 'application/json',\r\n+  },\r\n+})\r\n+\r\n+api.interceptors.request.use(\r\n+  (config) => {\r\n+    const token = localStorage.getItem('admin_token')\r\n+\r\n+    if (token) {\r\n+      config.headers.Authorization = `Bearer ${token}`\r\n+    }\r\n+\r\n+    return config\r\n+  },\r\n+  (error) => Promise.reject(error),\r\n+)\r\n+\r\n+api.interceptors.response.use(\r\n+  (response) => response,\r\n+  (error) => {\r\n+    if (error.response?.status === 401) {\r\n+      localStorage.removeItem('admin_token')\r\n+\r\n+      /*\r\n+       * Ne preusmjeravamo tijekom samog login zahtjeva,\r\n+       * jer 401 na loginu znači pogrešne podatke.\r\n+       */\r\n+      const isLoginRequest =\r\n+        error.config?.url === '/admin/login'\r\n+\r\n+      const isOnAdminPage =\r\n+        window.location.pathname.startsWith('/admin')\r\n+\r\n+      const isOnLoginPage =\r\n+        window.location.pathname === '/admin/login'\r\n+\r\n+      if (\r\n+        !isLoginRequest &&\r\n+        isOnAdminPage &&\r\n+        !isOnLoginPage\r\n+      ) {\r\n+        window.location.replace('/admin/login')\r\n+      }\r\n+    }\r\n+\r\n+    return Promise.reject(error)\r\n+  },\r\n+)\r\n+\r\n+export default api\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1783927134364,
+            "name": "Commit-0",
+            "content": ""
+        }
+    ]
+}

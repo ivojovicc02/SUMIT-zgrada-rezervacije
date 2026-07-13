@@ -1,0 +1,141 @@
+```vue
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import {
+  currentUser,
+  logout,
+} from '../services/authService'
+import '../styles/admin-layout.css'
+
+const router = useRouter()
+const isMenuOpen = ref(false)
+
+function toggleMenu() {
+  isMenuOpen.value = !isMenuOpen.value
+}
+
+function closeMenu() {
+  isMenuOpen.value = false
+}
+
+async function handleLogout() {
+  logout()
+  closeMenu()
+  await router.replace('/admin/login')
+}
+</script>
+
+<template>
+  <div class="admin-layout">
+    <header class="admin-header">
+      <RouterLink
+        to="/admin"
+        class="admin-logo-link"
+        @click="closeMenu"
+      >
+        <img
+          src="../assets/sumit-logo.png"
+          alt="SUMIT"
+          class="admin-logo"
+        />
+      </RouterLink>
+
+      <button
+        type="button"
+        class="admin-menu-button"
+        aria-label="Otvori administratorski izbornik"
+        :aria-expanded="isMenuOpen"
+        @click="toggleMenu"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <div
+        v-if="isMenuOpen"
+        class="admin-menu-overlay"
+        @click="closeMenu"
+      ></div>
+
+      <aside
+        class="admin-menu"
+        :class="{ 'admin-menu--open': isMenuOpen }"
+      >
+        <div class="admin-menu-header">
+          <div>
+            <span class="admin-menu-label">
+              Prijavljeni korisnik
+            </span>
+
+            <p class="admin-username">
+              {{
+                currentUser?.username ||
+                'Administrator'
+              }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="admin-menu-close"
+            aria-label="Zatvori izbornik"
+            @click="closeMenu"
+          >
+            ×
+          </button>
+        </div>
+
+        <nav class="admin-navigation">
+          <RouterLink
+            to="/admin"
+            exact-active-class="active"
+            @click="closeMenu"
+          >
+            Dashboard
+          </RouterLink>
+
+          <RouterLink
+            to="/admin/prostori"
+            @click="closeMenu"
+          >
+            Prostori
+          </RouterLink>
+
+          <RouterLink
+            to="/admin/rezervacije"
+            @click="closeMenu"
+          >
+            Rezervacije
+          </RouterLink>
+
+          <RouterLink
+            to="/admin/izvjestaji"
+            @click="closeMenu"
+          >
+            Izvještaji
+          </RouterLink>
+        </nav>
+
+        <button
+          type="button"
+          class="admin-logout-button"
+          @click="handleLogout"
+        >
+          Odjava
+        </button>
+      </aside>
+    </header>
+
+    <main class="admin-content">
+      <RouterView />
+    </main>
+
+    <footer class="admin-footer">
+      <p>
+        © 2026 SUMIT — Sustav za rezervaciju prostora
+      </p>
+    </footer>
+  </div>
+</template>

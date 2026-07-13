@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 1,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1783782238339,
@@ -12,6 +12,14 @@
                 {
                     "date": 1783782690287,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,4 +1,9 @@\n import { createApp } from 'vue'\r\n import App from './App.vue'\r\n+import router from './router'\r\n+import './style.css'\r\n \r\n-createApp(App).mount('#app')\r\n+const app = createApp(App)\r\n+\r\n+app.use(router)\r\n+app.mount('#app')\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1783931301027,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,9 @@\n import { createApp } from 'vue'\r\n import App from './App.vue'\r\n import router from './router'\r\n import './style.css'\r\n+import './assets/styles/main.css'\r\n \r\n const app = createApp(App)\r\n \r\n app.use(router)\r\n"
+                },
+                {
+                    "date": 1783931456687,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,9 @@\n import { createApp } from 'vue'\r\n import App from './App.vue'\r\n import router from './router'\r\n import './style.css'\r\n-import './assets/styles/main.css'\r\n+import './styles/main.css'\r\n \r\n const app = createApp(App)\r\n \r\n app.use(router)\r\n"
                 }
             ],
             "date": 1783782238339,

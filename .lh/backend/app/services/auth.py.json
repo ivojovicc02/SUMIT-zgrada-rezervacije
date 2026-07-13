@@ -1,0 +1,30 @@
+{
+    "sourceFile": "backend/app/services/auth.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 3,
+            "patches": [
+                {
+                    "date": 1783955716335,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783957015527,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -6,9 +6,9 @@\n from jose import JWTError, jwt\r\n from passlib.context import CryptContext\r\n from sqlalchemy.orm import Session\r\n \r\n-from database import get_db\r\n+from app.database import get_db\r\n from models.user import User\r\n \r\n \r\n pwd_context = CryptContext(\r\n"
+                },
+                {
+                    "date": 1783957027095,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n from passlib.context import CryptContext\r\n from sqlalchemy.orm import Session\r\n \r\n from app.database import get_db\r\n-from models.user import User\r\n+from app.models.user import User\r\n \r\n \r\n pwd_context = CryptContext(\r\n     schemes=[\"bcrypt\"],\r\n"
+                },
+                {
+                    "date": 1783957057872,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -7,9 +7,9 @@\n from passlib.context import CryptContext\r\n from sqlalchemy.orm import Session\r\n \r\n from app.database import get_db\r\n-from app.models.user import User\r\n+from app.models.users import User\r\n \r\n \r\n pwd_context = CryptContext(\r\n     schemes=[\"bcrypt\"],\r\n"
+                }
+            ],
+            "date": 1783955716335,
+            "name": "Commit-0",
+            "content": "from datetime import datetime, timedelta, timezone\r\nimport os\r\n\r\nfrom fastapi import Depends, HTTPException, status\r\nfrom fastapi.security import OAuth2PasswordBearer\r\nfrom jose import JWTError, jwt\r\nfrom passlib.context import CryptContext\r\nfrom sqlalchemy.orm import Session\r\n\r\nfrom database import get_db\r\nfrom models.user import User\r\n\r\n\r\npwd_context = CryptContext(\r\n    schemes=[\"bcrypt\"],\r\n    deprecated=\"auto\",\r\n)\r\n\r\noauth2_scheme = OAuth2PasswordBearer(tokenUrl=\"/admin/login\")\r\n\r\nSECRET_KEY = os.getenv(\"SECRET_KEY\")\r\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\r\nACCESS_TOKEN_EXPIRE_MINUTES = int(\r\n    os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", 480)\r\n)\r\n\r\nif not SECRET_KEY:\r\n    raise RuntimeError(\"SECRET_KEY nije postavljen u environment varijablama\")\r\n\r\n\r\ndef verify_password(\r\n    plain_password: str,\r\n    hashed_password: str,\r\n) -> bool:\r\n    return pwd_context.verify(\r\n        plain_password,\r\n        hashed_password,\r\n    )\r\n\r\n\r\ndef get_password_hash(password: str) -> str:\r\n    return pwd_context.hash(password)\r\n\r\n\r\ndef create_access_token(data: dict) -> str:\r\n    to_encode = data.copy()\r\n\r\n    expire = datetime.now(timezone.utc) + timedelta(\r\n        minutes=ACCESS_TOKEN_EXPIRE_MINUTES\r\n    )\r\n\r\n    to_encode.update({\"exp\": expire})\r\n\r\n    return jwt.encode(\r\n        to_encode,\r\n        SECRET_KEY,\r\n        algorithm=ALGORITHM,\r\n    )\r\n\r\n\r\ndef get_current_user(\r\n    token: str = Depends(oauth2_scheme),\r\n    db: Session = Depends(get_db),\r\n) -> User:\r\n    credentials_exception = HTTPException(\r\n        status_code=status.HTTP_401_UNAUTHORIZED,\r\n        detail=\"Nevalidan ili istekao token\",\r\n        headers={\"WWW-Authenticate\": \"Bearer\"},\r\n    )\r\n\r\n    try:\r\n        payload = jwt.decode(\r\n            token,\r\n            SECRET_KEY,\r\n            algorithms=[ALGORITHM],\r\n        )\r\n\r\n        user_id = payload.get(\"sub\")\r\n\r\n        if user_id is None:\r\n            raise credentials_exception\r\n\r\n        try:\r\n            user_id = int(user_id)\r\n        except (TypeError, ValueError):\r\n            raise credentials_exception\r\n\r\n    except JWTError:\r\n        raise credentials_exception\r\n\r\n    user = (\r\n        db.query(User)\r\n        .filter(User.id == user_id)\r\n        .first()\r\n    )\r\n\r\n    if user is None:\r\n        raise credentials_exception\r\n\r\n    if not user.is_active:\r\n        raise HTTPException(\r\n            status_code=status.HTTP_403_FORBIDDEN,\r\n            detail=\"Korisnički račun nije aktivan\",\r\n        )\r\n\r\n    return user\r\n\r\n\r\ndef get_current_admin(\r\n    current_user: User = Depends(get_current_user),\r\n) -> User:\r\n    if current_user.role != \"admin\":\r\n        raise HTTPException(\r\n            status_code=status.HTTP_403_FORBIDDEN,\r\n            detail=\"Nemate administratorska prava\",\r\n        )\r\n\r\n    return current_user"
+        }
+    ]
+}

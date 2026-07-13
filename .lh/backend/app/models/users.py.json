@@ -1,0 +1,22 @@
+{
+    "sourceFile": "backend/app/models/users.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1783955626027,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783957116301,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,8 @@\n # models/user.py\r\n \r\n from sqlalchemy import Boolean, Column, Integer, String\r\n-from database import Base\r\n+from app.database import Base\r\n \r\n \r\n class User(Base):\r\n     __tablename__ = \"users\"\r\n"
+                }
+            ],
+            "date": 1783955626027,
+            "name": "Commit-0",
+            "content": "# models/user.py\r\n\r\nfrom sqlalchemy import Boolean, Column, Integer, String\r\nfrom database import Base\r\n\r\n\r\nclass User(Base):\r\n    __tablename__ = \"users\"\r\n\r\n    id = Column(Integer, primary_key=True, index=True)\r\n    username = Column(String(100), unique=True, nullable=False, index=True)\r\n    email = Column(String(255), unique=True, nullable=True)\r\n    hashed_password = Column(String(255), nullable=False)\r\n\r\n    role = Column(String(50), nullable=False, default=\"user\")\r\n    is_active = Column(Boolean, nullable=False, default=True)"
+        }
+    ]
+}

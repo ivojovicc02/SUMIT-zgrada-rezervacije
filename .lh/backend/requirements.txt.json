@@ -1,0 +1,26 @@
+{
+    "sourceFile": "backend/requirements.txt",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1783928332526,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783952355734,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,6 +2,5 @@\n google-auth-oauthlib\r\n google-api-python-client\r\n fastapi-mail\r\n python-jose[cryptography]\r\n-passlib[bcrypt]\r\n-psycopg2-binary\n\\ No newline at end of file\n+passlib[bcrypt]\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1783958378235,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,6 +1,13 @@\n+fastapi\r\n+uvicorn\r\n+sqlalchemy\r\n+psycopg2-binary\r\n+python-dotenv\r\n google-auth\r\n\\ No newline at end of file\n google-auth-oauthlib\r\n google-api-python-client\r\n fastapi-mail\r\n python-jose[cryptography]\r\n-passlib[bcrypt]\n+passlib==1.7.4\r\n+bcrypt==4.0.1\r\n+python-multipart\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1783928332526,
+            "name": "Commit-0",
+            "content": "google-auth\r\ngoogle-auth-oauthlib\r\ngoogle-api-python-client\r\nfastapi-mail\r\npython-jose[cryptography]\r\npasslib[bcrypt]\r\npsycopg2-binary"
+        }
+    ]
+}

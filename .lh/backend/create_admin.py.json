@@ -1,0 +1,18 @@
+{
+    "sourceFile": "backend/create_admin.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1783956415002,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1783956415002,
+            "name": "Commit-0",
+            "content": "from database import SessionLocal\r\nfrom models.user import User\r\nfrom auth import get_password_hash\r\n\r\n\r\ndef create_first_admin():\r\n    db = SessionLocal()\r\n\r\n    try:\r\n        existing_admin = (\r\n            db.query(User)\r\n            .filter(User.role == \"admin\")\r\n            .first()\r\n        )\r\n\r\n        if existing_admin:\r\n            print(\"Admin već postoji.\")\r\n            return\r\n\r\n        admin = User(\r\n            username=\"admin\",\r\n            email=\"admin@sumit.ba\",\r\n            hashed_password=get_password_hash(\"Admin123!\"),\r\n            role=\"admin\",\r\n            is_active=True,\r\n        )\r\n\r\n        db.add(admin)\r\n        db.commit()\r\n        db.refresh(admin)\r\n\r\n        print(f\"Admin uspješno kreiran: {admin.username}\")\r\n\r\n    except Exception as error:\r\n        db.rollback()\r\n        print(f\"Greška pri kreiranju admina: {error}\")\r\n\r\n    finally:\r\n        db.close()\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    create_first_admin()"
+        }
+    ]
+}

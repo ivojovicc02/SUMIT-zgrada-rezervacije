@@ -1,0 +1,26 @@
+{
+    "sourceFile": "backend/app/main.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 2,
+            "patches": [
+                {
+                    "date": 1783954013479,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1783954028629,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,8 +3,9 @@\n from app.routers import spaces\r\n from app.routers import spaces, reservations\r\n from app.routers import spaces, reservations, admin\r\n from app.routers import spaces, reservations, admin, availability\r\n+from fastapi.middleware.cors import CORSMiddleware\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n \r\n app = FastAPI(title=\"SUMIT Rezervacije\")\r\n"
+                },
+                {
+                    "date": 1783959409990,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,6 @@\n from fastapi import FastAPI\r\n from app.database import Base, engine\r\n-from app.routers import spaces\r\n-from app.routers import spaces, reservations\r\n-from app.routers import spaces, reservations, admin\r\n from app.routers import spaces, reservations, admin, availability\r\n from fastapi.middleware.cors import CORSMiddleware\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n"
+                }
+            ],
+            "date": 1783954013479,
+            "name": "Commit-0",
+            "content": "from fastapi import FastAPI\r\nfrom app.database import Base, engine\r\nfrom app.routers import spaces\r\nfrom app.routers import spaces, reservations\r\nfrom app.routers import spaces, reservations, admin\r\nfrom app.routers import spaces, reservations, admin, availability\r\n\r\nBase.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n\r\napp = FastAPI(title=\"SUMIT Rezervacije\")\r\n\r\napp.add_middleware(\r\n    CORSMiddleware,\r\n    allow_origins=[\r\n        \"http://localhost:5173\",\r\n        \"http://127.0.0.1:5173\",\r\n    ],\r\n    allow_credentials=True,\r\n    allow_methods=[\"*\"],\r\n    allow_headers=[\"*\"],\r\n)\r\n\r\napp.include_router(spaces.router)\r\napp.include_router(reservations.router)\r\napp.include_router(admin.router)\r\napp.include_router(availability.router)"
+        }
+    ]
+}
