@@ -1,4 +1,13 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {
+  createRouter,
+  createWebHistory,
+} from 'vue-router'
+
+import {
+  initializeAuth,
+  initialized,
+  isAuthenticated,
+} from '../services/authService'
 
 import HomeView from '../views/public/HomeView.vue'
 import AdminLoginView from '../views/admin/AdminLoginView.vue'
@@ -9,15 +18,11 @@ import AdminReservationsView from '../views/admin/AdminReservationsView.vue'
 import AdminReportsView from '../views/admin/AdminReportsView.vue'
 
 const routes = [
-  // JAVNI DIO
-  // Kolega kasnije ovdje može dodati svoje rute.
   {
     path: '/',
     name: 'home',
     component: HomeView,
   },
-
-  // ADMIN LOGIN
   {
     path: '/admin/login',
     name: 'admin-login',
@@ -26,13 +31,11 @@ const routes = [
       guestOnly: true,
     },
   },
-
-  // ADMIN DIO
   {
     path: '/admin',
     component: AdminLayout,
     meta: {
-      requiresAdmin: true,
+      requiresAuth: true,
     },
     children: [
       {
@@ -57,8 +60,6 @@ const routes = [
       },
     ],
   },
-
-  // Nepostojeća ruta vraća korisnika na početnu.
   {
     path: '/:pathMatch(.*)*',
     redirect: '/',
@@ -71,22 +72,28 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  const isAdminLoggedIn = Boolean(
-    localStorage.getItem('admin_token'),
-  )
+  if (!initialized.value) {
+    initializeAuth()
+  }
 
-  if (to.meta.requiresAdmin && !isAdminLoggedIn) {
+  if (
+    to.meta.guestOnly &&
+    isAuthenticated.value
+  ) {
+    return {
+      name: 'admin-dashboard',
+    }
+  }
+
+  if (
+    to.meta.requiresAuth &&
+    !isAuthenticated.value
+  ) {
     return {
       name: 'admin-login',
       query: {
         redirect: to.fullPath,
       },
-    }
-  }
-
-  if (to.meta.guestOnly && isAdminLoggedIn) {
-    return {
-      name: 'admin-dashboard',
     }
   }
 
