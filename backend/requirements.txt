@@ -1,6 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+python-dotenv
 google-auth
 google-auth-oauthlib
 google-api-python-client
 fastapi-mail
 python-jose[cryptography]
 passlib[bcrypt]
+python-multipart
