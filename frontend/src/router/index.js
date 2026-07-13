@@ -35,7 +35,7 @@ const routes = [
     path: '/admin',
     component: AdminLayout,
     meta: {
-      requiresAuth: true,
+      requiresAuth: false,
     },
     children: [
       {
