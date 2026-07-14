@@ -10,8 +10,47 @@ const spaces = ref([])
 const isLoading = ref(false)
 const errorMessage = ref('')
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://127.0.0.1:8000'
+
 const fallbackImage =
   'https://placehold.co/240x160?text=Nema+slike'
+
+function getImageUrl(url) {
+  if (!url) {
+    return fallbackImage
+  }
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url
+  }
+
+  const normalizedUrl = url.startsWith('/')
+    ? url
+    : `/${url}`
+
+  return `${API_BASE_URL}${normalizedUrl}`
+}
+
+function getPrimaryImage(space) {
+  if (!Array.isArray(space.images)) {
+    return fallbackImage
+  }
+
+  const primaryImage = space.images.find(
+    (image) => image.is_primary === true
+  )
+
+  const imagePath =
+    primaryImage?.url ||
+    space.images[0]?.url
+
+  return getImageUrl(imagePath)
+}
 
 async function fetchSpaces() {
   isLoading.value = true
@@ -112,24 +151,6 @@ const availableSpaceSubtypes = computed(() => {
     )
     .sort()
 })
-
-function getPrimaryImage(space) {
-  if (!Array.isArray(space.images)) {
-    return fallbackImage
-  }
-
-  const primaryImage = space.images.find(
-    (image) =>
-      image.is_primary === true ||
-      image.is_primary === 1,
-  )
-
-  return (
-    primaryImage?.url ||
-    space.images[0]?.url ||
-    fallbackImage
-  )
-}
 
 function handleImageError(event) {
   event.target.src = fallbackImage
@@ -821,7 +842,7 @@ function closeSpaceDetails() {
             <img
               v-for="image in selectedSpace.images"
               :key="image.id || image.url"
-              :src="image.url"
+              :src="getImageUrl(image.url)"
               :alt="selectedSpace.name"
               @error="handleImageError"
             />
