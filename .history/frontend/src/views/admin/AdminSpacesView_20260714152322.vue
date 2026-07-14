@@ -669,23 +669,18 @@ function closeSpaceDetails() {
                   </button>
 
                   <button
-                      class="icon-button icon-button--danger"
-                      type="button"
-                      title="Obriši prostor"
-                      :disabled="deletingSpaceId === space.id"
-                      @click.stop="deleteSpace(space)"
-                    >
-                      <svg
-                        v-if="deletingSpaceId !== space.id"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"
-                        />
+                    class="icon-button icon-button--danger"
+                    type="button"
+                    title="Obriši prostor"
+                    @click.stop="deleteSpace(space)"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"
+                      />
 
-                        <path d="M10 11v5M14 11v5" />
-                      </svg>
+                      <path d="M10 11v5M14 11v5" />
+                    </svg>
                   </button>
                 </div>
               </td>

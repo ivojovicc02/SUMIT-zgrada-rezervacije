@@ -262,40 +262,8 @@ function openCalendar(space) {
   console.log('Otvori kalendar prostora:', space)
 }
 
-async function deleteSpace(space) {
-  const confirmed = window.confirm(
-    `Jeste li sigurni da želite obrisati prostor "${space.name}"?`,
-  )
-
-  if (!confirmed) {
-    return
-  }
-
-  deletingSpaceId.value = space.id
-  errorMessage.value = ''
-
-  try {
-    await deleteSpaceById(space.id)
-
-    spaces.value = spaces.value.filter(
-      (item) => item.id !== space.id,
-    )
-
-    if (selectedSpace.value?.id === space.id) {
-      closeSpaceDetails()
-    }
-  } catch (error) {
-    console.error('Greška pri brisanju prostora:', error)
-
-    const detail = error.response?.data?.detail
-
-    errorMessage.value =
-      typeof detail === 'string'
-        ? detail
-        : 'Nije moguće obrisati prostor.'
-  } finally {
-    deletingSpaceId.value = null
-  }
+function deleteSpace(space) {
+  console.log('Obriši prostor:', space)
 }
 
 const selectedSpace = ref(null)
@@ -669,23 +637,18 @@ function closeSpaceDetails() {
                   </button>
 
                   <button
-                      class="icon-button icon-button--danger"
-                      type="button"
-                      title="Obriši prostor"
-                      :disabled="deletingSpaceId === space.id"
-                      @click.stop="deleteSpace(space)"
-                    >
-                      <svg
-                        v-if="deletingSpaceId !== space.id"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"
-                        />
+                    class="icon-button icon-button--danger"
+                    type="button"
+                    title="Obriši prostor"
+                    @click.stop="deleteSpace(space)"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13"
+                      />
 
-                        <path d="M10 11v5M14 11v5" />
-                      </svg>
+                      <path d="M10 11v5M14 11v5" />
+                    </svg>
                   </button>
                 </div>
               </td>

@@ -13,7 +13,3 @@ export function getSpaceById(spaceId) {
 
   return api.get(`/admin/spaces/${spaceId}`)
 }
-
-export function deleteSpaceById(spaceId) {
-  return api.delete(`/admin/spaces/${spaceId}`)
-}

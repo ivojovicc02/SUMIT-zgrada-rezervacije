@@ -54,7 +54,7 @@ ALLOWED_IMAGE_TYPES = {
 
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 
-UPLOAD_ROOT = Path("uploads/spaces")
+UPLOAD_ROOT = Path("/app/uploads/spaces")
 UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
 @router.post(
@@ -631,6 +631,7 @@ def delete_space(
         )
 
     space_name = space.name
+    space_directory = UPLOAD_ROOT / str(space_id)
 
     try:
         db.delete(space)
@@ -640,10 +641,25 @@ def delete_space(
         db.rollback()
         raise
 
-    return {
-        "message": f"Prostor '{space_name}' je obrisan."
-    }
+    try:
+        if space_directory.exists():
+            shutil.rmtree(space_directory)
 
+    except OSError as error:
+        # Prostor je već obrisan iz baze, ali prijavljujemo
+        # da datoteke nisu uspješno očišćene.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=(
+                "Prostor je obrisan iz baze, ali direktorij "
+                f"sa slikama nije obrisan: {error}"
+            ),
+        )
+
+    return {
+        "message": f"Prostor '{space_name}' je obrisan.",
+        "deleted_images_directory": str(space_directory),
+    }
 
 # ─── REZERVACIJE ──────────────────────────────────────────────────────────────
 

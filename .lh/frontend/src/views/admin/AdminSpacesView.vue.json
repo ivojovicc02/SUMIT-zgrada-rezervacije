@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 29,
+            "activePatchIndex": 36,
             "patches": [
                 {
                     "date": 1783782833170,
@@ -124,6 +124,34 @@
                 {
                     "date": 1784030494670,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -837,17 +837,17 @@\n           class=\"details-section\"\r\n         >\r\n           <h3>Galerija</h3>\r\n \r\n-<div class=\"details-gallery\">\r\n-  <img\r\n-    v-for=\"image in selectedSpace.images\"\r\n-    :key=\"image.id || image.url\"\r\n-    :src=\"getImageUrl(image.url)\"\r\n-    :alt=\"selectedSpace.name\"\r\n-    @error=\"handleImageError\"\r\n-  />\r\n-</div>\r\n+          <div class=\"details-gallery\">\r\n+            <img\r\n+              v-for=\"image in selectedSpace.images\"\r\n+              :key=\"image.id || image.url\"\r\n+              :src=\"getImageUrl(image.url)\"\r\n+              :alt=\"selectedSpace.name\"\r\n+              @error=\"handleImageError\"\r\n+            />\r\n+          </div>\r\n         </section>\r\n       </div>\r\n     </div>\r\n   </div>\r\n"
+                },
+                {
+                    "date": 1784035304490,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,7 @@\n <script setup>\r\n import { computed, onMounted, ref } from 'vue'\r\n-import { getSpaces } from '../../services/admin/spaceService'\r\n+import { getSpaces,deleteSpaceById, } from '../../services/admin/spaceService'\r\n \r\n const searchQuery = ref('')\r\n const selectedCategory = ref('')\r\n const selectedSubtype = ref('')\r\n"
+                },
+                {
+                    "date": 1784035314477,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,7 @@\n <script setup>\r\n import { computed, onMounted, ref } from 'vue'\r\n-import { getSpaces,deleteSpaceById, } from '../../services/admin/spaceService'\r\n+import { getSpaces,deleteSpaceById,getSpaceById } from '../../services/admin/spaceService'\r\n \r\n const searchQuery = ref('')\r\n const selectedCategory = ref('')\r\n const selectedSubtype = ref('')\r\n"
+                },
+                {
+                    "date": 1784035333721,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -8,8 +8,9 @@\n \r\n const spaces = ref([])\r\n const isLoading = ref(false)\r\n const errorMessage = ref('')\r\n+const deletingSpaceId = ref(null)\r\n \r\n const API_BASE_URL =\r\n   import.meta.env.VITE_API_URL ||\r\n   'http://127.0.0.1:8000'\r\n"
+                },
+                {
+                    "date": 1784035402377,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -261,10 +261,42 @@\n function openCalendar(space) {\r\n   console.log('Otvori kalendar prostora:', space)\r\n }\r\n \r\n-function deleteSpace(space) {\r\n-  console.log('Obriši prostor:', space)\r\n+async function deleteSpace(space) {\r\n+  const confirmed = window.confirm(\r\n+    `Jeste li sigurni da želite obrisati prostor \"${space.name}\"?`,\r\n+  )\r\n+\r\n+  if (!confirmed) {\r\n+    return\r\n+  }\r\n+\r\n+  deletingSpaceId.value = space.id\r\n+  errorMessage.value = ''\r\n+\r\n+  try {\r\n+    await deleteSpaceById(space.id)\r\n+\r\n+    spaces.value = spaces.value.filter(\r\n+      (item) => item.id !== space.id,\r\n+    )\r\n+\r\n+    if (selectedSpace.value?.id === space.id) {\r\n+      closeSpaceDetails()\r\n+    }\r\n+  } catch (error) {\r\n+    console.error('Greška pri brisanju prostora:', error)\r\n+\r\n+    const detail = error.response?.data?.detail\r\n+\r\n+    errorMessage.value =\r\n+      typeof detail === 'string'\r\n+        ? detail\r\n+        : 'Nije moguće obrisati prostor.'\r\n+  } finally {\r\n+    deletingSpaceId.value = null\r\n+  }\r\n }\r\n \r\n const selectedSpace = ref(null)\r\n const isDetailsModalOpen = ref(false)\r\n"
+                },
+                {
+                    "date": 1784035535273,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -668,13 +668,31 @@\n                     </svg>\r\n                   </button>\r\n \r\n                   <button\r\n-                    class=\"icon-button icon-button--danger\"\r\n-                    type=\"button\"\r\n-                    title=\"Obriši prostor\"\r\n-                    @click.stop=\"deleteSpace(space)\"\r\n-                  >\r\n+                      class=\"icon-button icon-button--danger\"\r\n+                      type=\"button\"\r\n+                      title=\"Obriši prostor\"\r\n+                      :disabled=\"deletingSpaceId === space.id\"\r\n+                      @click.stop=\"deleteSpace(space)\"\r\n+                    >\r\n+                      <svg\r\n+                        v-if=\"deletingSpaceId !== space.id\"\r\n+                        viewBox=\"0 0 24 24\"\r\n+                        aria-hidden=\"true\"\r\n+                      >\r\n+                        <path\r\n+                          d=\"M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13\"\r\n+                        />\r\n+\r\n+                        <path d=\"M10 11v5M14 11v5\" />\r\n+                      </svg>\r\n+\r\n+                      <span\r\n+                        v-else\r\n+                        class=\"button-spinner\"\r\n+                        aria-label=\"Brisanje\"\r\n+                      ></span>\r\n                     <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\r\n                       <path\r\n                         d=\"M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13\"\r\n                       />\r\n"
+                },
+                {
+                    "date": 1784035601931,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -682,23 +682,8 @@\n                       >\r\n                         <path\r\n                           d=\"M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13\"\r\n                         />\r\n-\r\n-                        <path d=\"M10 11v5M14 11v5\" />\r\n-                      </svg>\r\n-\r\n-                      <span\r\n-                        v-else\r\n-                        class=\"button-spinner\"\r\n-                        aria-label=\"Brisanje\"\r\n-                      ></span>\r\n-                    <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\">\r\n-                      <path\r\n-                        d=\"M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13\"\r\n-                      />\r\n-\r\n-                      <path d=\"M10 11v5M14 11v5\" />\r\n                     </svg>\r\n                   </button>\r\n                 </div>\r\n               </td>\r\n"
+                },
+                {
+                    "date": 1784035626897,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -682,9 +682,11 @@\n                       >\r\n                         <path\r\n                           d=\"M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13\"\r\n                         />\r\n-                    </svg>\r\n+\r\n+                        <path d=\"M10 11v5M14 11v5\" />\r\n+                      </svg>\r\n                   </button>\r\n                 </div>\r\n               </td>\r\n             </tr>\r\n"
                 }
             ],
             "date": 1783782833170,

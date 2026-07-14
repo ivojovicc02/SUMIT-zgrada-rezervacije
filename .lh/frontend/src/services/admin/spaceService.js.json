@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 1,
+            "activePatchIndex": 3,
             "patches": [
                 {
                     "date": 1784021301593,
@@ -12,6 +12,14 @@
                 {
                     "date": 1784021606150,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,6 +4,12 @@\n   return api.get('/admin/spaces', { params })\r\n }\r\n \r\n export function getSpaceById(spaceId) {\r\n+  if (!spaceId) {\r\n+    return Promise.reject(\r\n+      new Error('ID prostora nije proslijeđen.'),\r\n+    )\r\n+  }\r\n+\r\n   return api.get(`/admin/spaces/${spaceId}`)\r\n }\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1784035227051,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -11,5 +11,5 @@\n     )\r\n   }\r\n \r\n   return api.get(`/admin/spaces/${spaceId}`)\r\n-}\n\\ No newline at end of file\n+}\r\n"
+                },
+                {
+                    "date": 1784035280152,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -12,4 +12,8 @@\n   }\r\n \r\n   return api.get(`/admin/spaces/${spaceId}`)\r\n }\r\n+\r\n+export function deleteSpaceById(spaceId) {\r\n+  return api.delete(`/admin/spaces/${spaceId}`)\r\n+}\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1784021301593,

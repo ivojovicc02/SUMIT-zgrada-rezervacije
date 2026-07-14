@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 44,
+            "activePatchIndex": 47,
             "patches": [
                 {
                     "date": 1783955748639,
@@ -184,6 +184,18 @@
                 {
                     "date": 1784029701309,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -129,9 +129,9 @@\n \r\n         db_image = SpaceImage(\r\n             space_id=space_id,\r\n             url=relative_url,\r\n-            is_primary=1 if is_primary else 0,\r\n+            is_primary=is_primary,\r\n         )\r\n \r\n         db.add(db_image)\r\n         db.commit()\r\n"
+                },
+                {
+                    "date": 1784034033631,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -631,21 +631,31 @@\n         )\r\n \r\n     space_name = space.name\r\n \r\n+    # Direktorij u kojem su spremljene slike prostora\r\n+    space_directory = (\r\n+        Path(\"uploads\")\r\n+        / \"spaces\"\r\n+        / str(space_id)\r\n+    )\r\n+\r\n     try:\r\n         db.delete(space)\r\n         db.commit()\r\n \r\n     except Exception:\r\n         db.rollback()\r\n         raise\r\n \r\n+    # Nakon uspješnog brisanja iz baze obriši slike\r\n+    if space_directory.exists():\r\n+        shutil.rmtree(space_directory)\r\n+\r\n     return {\r\n         \"message\": f\"Prostor '{space_name}' je obrisan.\"\r\n     }\r\n \r\n-\r\n # ─── REZERVACIJE ──────────────────────────────────────────────────────────────\r\n \r\n @router.get(\"/reservations\")\r\n def get_reservations(\r\n"
+                },
+                {
+                    "date": 1784034337228,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -53,9 +53,9 @@\n }\r\n \r\n MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB\r\n \r\n-UPLOAD_ROOT = Path(\"uploads/spaces\")\r\n+UPLOAD_ROOT = Path(\"/app/uploads/spaces\")\r\n UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)\r\n \r\n @router.post(\r\n     \"/spaces/{space_id}/images\",\r\n"
+                },
+                {
+                    "date": 1784034399901,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -630,30 +630,36 @@\n             ),\r\n         )\r\n \r\n     space_name = space.name\r\n+    space_directory = UPLOAD_ROOT / str(space_id)\r\n \r\n-    # Direktorij u kojem su spremljene slike prostora\r\n-    space_directory = (\r\n-        Path(\"uploads\")\r\n-        / \"spaces\"\r\n-        / str(space_id)\r\n-    )\r\n-\r\n     try:\r\n         db.delete(space)\r\n         db.commit()\r\n \r\n     except Exception:\r\n         db.rollback()\r\n         raise\r\n \r\n-    # Nakon uspješnog brisanja iz baze obriši slike\r\n-    if space_directory.exists():\r\n-        shutil.rmtree(space_directory)\r\n+    try:\r\n+        if space_directory.exists():\r\n+            shutil.rmtree(space_directory)\r\n \r\n+    except OSError as error:\r\n+        # Prostor je već obrisan iz baze, ali prijavljujemo\r\n+        # da datoteke nisu uspješno očišćene.\r\n+        raise HTTPException(\r\n+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,\r\n+            detail=(\r\n+                \"Prostor je obrisan iz baze, ali direktorij \"\r\n+                f\"sa slikama nije obrisan: {error}\"\r\n+            ),\r\n+        )\r\n+\r\n     return {\r\n-        \"message\": f\"Prostor '{space_name}' je obrisan.\"\r\n+        \"message\": f\"Prostor '{space_name}' je obrisan.\",\r\n+        \"deleted_images_directory\": str(space_directory),\r\n     }\r\n \r\n # ─── REZERVACIJE ──────────────────────────────────────────────────────────────\r\n \r\n"
                 }
             ],
             "date": 1783955748639,
