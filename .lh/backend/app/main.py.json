@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 2,
+            "activePatchIndex": 4,
             "patches": [
                 {
                     "date": 1783954013479,
@@ -16,6 +16,14 @@
                 {
                     "date": 1783959409990,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,9 +1,6 @@\n from fastapi import FastAPI\r\n from app.database import Base, engine\r\n-from app.routers import spaces\r\n-from app.routers import spaces, reservations\r\n-from app.routers import spaces, reservations, admin\r\n from app.routers import spaces, reservations, admin, availability\r\n from fastapi.middleware.cors import CORSMiddleware\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n"
+                },
+                {
+                    "date": 1784027146030,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,7 +1,7 @@\n from fastapi import FastAPI\r\n from app.database import Base, engine\r\n-from app.routers import spaces, reservations, admin, availability\r\n+from app.routers import reservations, admin, availability\r\n from fastapi.middleware.cors import CORSMiddleware\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n \r\n"
+                },
+                {
+                    "date": 1784027186913,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,8 +17,7 @@\n     allow_methods=[\"*\"],\r\n     allow_headers=[\"*\"],\r\n )\r\n \r\n-app.include_router(spaces.router)\r\n app.include_router(reservations.router)\r\n app.include_router(admin.router)\r\n app.include_router(availability.router)\n\\ No newline at end of file\n"
                 }
             ],
             "date": 1783954013479,

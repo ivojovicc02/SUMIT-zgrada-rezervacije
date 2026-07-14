@@ -1,0 +1,46 @@
+{
+    "sourceFile": "backend/app/routers/spaces.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 7,
+            "patches": [
+                {
+                    "date": 1784023751152,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1784023944975,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,5 +1,5 @@\n-from fastapi import APIRouter, Depends, HTTPException\r\n+from fastapi import APIRouter, Depends, HTTPException ,status\r\n from sqlalchemy.orm import Session\r\n from app.database import get_db\r\n from app.models.spaces import Space, SpaceImage, SpaceEquipment\r\n from app.schemas.spaces import SpaceCreate, SpaceOut\r\n"
+                },
+                {
+                    "date": 1784024011334,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -2,8 +2,15 @@\n from sqlalchemy.orm import Session\r\n from app.database import get_db\r\n from app.models.spaces import Space, SpaceImage, SpaceEquipment\r\n from app.schemas.spaces import SpaceCreate, SpaceOut\r\n+from app.services.auth import (\r\n+    create_access_token,\r\n+    verify_password,\r\n+    get_password_hash,\r\n+    get_current_user,\r\n+    get_current_admin,\r\n+)\r\n \r\n router = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n \r\n @router.post(\r\n"
+                },
+                {
+                    "date": 1784024079300,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -22,9 +22,8 @@\n     data: SpaceCreate,\r\n     db: Session = Depends(get_db),\r\n     current_admin: User = Depends(get_current_admin),\r\n ):\r\n-    validate_space_data(data)\r\n \r\n     existing_space = (\r\n         db.query(Space)\r\n         .filter(\r\n"
+                },
+                {
+                    "date": 1784024092423,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -9,8 +9,9 @@\n     get_password_hash,\r\n     get_current_user,\r\n     get_current_admin,\r\n )\r\n+from app.models.users import User\r\n \r\n router = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n \r\n @router.post(\r\n"
+                },
+                {
+                    "date": 1784025770921,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,8 +10,10 @@\n     get_current_user,\r\n     get_current_admin,\r\n )\r\n from app.models.users import User\r\n+from sqlalchemy import func\r\n+from app.models.reservations import SpaceService\r\n \r\n router = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n \r\n @router.post(\r\n"
+                },
+                {
+                    "date": 1784025820362,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -11,10 +11,13 @@\n     get_current_admin,\r\n )\r\n from app.models.users import User\r\n from sqlalchemy import func\r\n-from app.models.reservations import SpaceService\r\n-\r\n+from app.models.reservations import (\r\n+    Reservation,\r\n+    ReservationStatus,\r\n+    SpaceService,\r\n+)\r\n router = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n \r\n @router.post(\r\n     \"/spaces\",\r\n"
+                },
+                {
+                    "date": 1784025837152,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -15,9 +15,9 @@\n from app.models.reservations import (\r\n     Reservation,\r\n     ReservationStatus,\r\n     SpaceService,\r\n-)\r\n+) \r\n router = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n \r\n @router.post(\r\n     \"/spaces\",\r\n"
+                }
+            ],
+            "date": 1784023751152,
+            "name": "Commit-0",
+            "content": "from fastapi import APIRouter, Depends, HTTPException\r\nfrom sqlalchemy.orm import Session\r\nfrom app.database import get_db\r\nfrom app.models.spaces import Space, SpaceImage, SpaceEquipment\r\nfrom app.schemas.spaces import SpaceCreate, SpaceOut\r\n\r\nrouter = APIRouter(prefix=\"/spaces\", tags=[\"Prostori\"])\r\n\r\n@router.post(\r\n    \"/spaces\",\r\n    response_model=SpaceOut,\r\n    status_code=status.HTTP_201_CREATED,\r\n)\r\ndef create_space(\r\n    data: SpaceCreate,\r\n    db: Session = Depends(get_db),\r\n    current_admin: User = Depends(get_current_admin),\r\n):\r\n    validate_space_data(data)\r\n\r\n    existing_space = (\r\n        db.query(Space)\r\n        .filter(\r\n            func.lower(Space.name)\r\n            == data.name.strip().lower()\r\n        )\r\n        .first()\r\n    )\r\n\r\n    if existing_space:\r\n        raise HTTPException(\r\n            status_code=status.HTTP_409_CONFLICT,\r\n            detail=\"Prostor s tim nazivom već postoji.\",\r\n        )\r\n\r\n    space = Space(\r\n        name=data.name.strip(),\r\n        description=data.description,\r\n        name_en=data.name_en,\r\n        description_en=data.description_en,\r\n        space_type=data.space_type,\r\n        space_subtype=data.space_subtype,\r\n        capacity=data.capacity,\r\n        price=data.price,\r\n        price_unit=data.price_unit,\r\n        is_modular=data.is_modular,\r\n        combination_group=(\r\n            data.combination_group\r\n            if data.is_modular\r\n            else None\r\n        ),\r\n    )\r\n\r\n    try:\r\n        db.add(space)\r\n        db.flush()\r\n\r\n        for image in data.images:\r\n            db.add(\r\n                SpaceImage(\r\n                    space_id=space.id,\r\n                    url=image.url,\r\n                    is_primary=image.is_primary,\r\n                )\r\n            )\r\n\r\n        for equipment in data.equipment:\r\n            db.add(\r\n                SpaceEquipment(\r\n                    space_id=space.id,\r\n                    name=equipment.name,\r\n                )\r\n            )\r\n\r\n        for service in data.services:\r\n            db.add(\r\n                SpaceService(\r\n                    space_id=space.id,\r\n                    name=service.name,\r\n                    name_en=service.name_en,\r\n                    description=service.description,\r\n                    description_en=service.description_en,\r\n                    price=service.price,\r\n                    conditions=service.conditions,\r\n                )\r\n            )\r\n\r\n        db.commit()\r\n        db.refresh(space)\r\n\r\n        return space\r\n\r\n    except Exception:\r\n        db.rollback()\r\n        raise"
+        }
+    ]
+}

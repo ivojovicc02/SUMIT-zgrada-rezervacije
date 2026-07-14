@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 15,
+            "activePatchIndex": 16,
             "patches": [
                 {
                     "date": 1783782528965,
@@ -68,6 +68,10 @@
                 {
                     "date": 1783953753338,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -54,5 +54,75 @@\n   } finally {\r\n     loading.value = false\r\n   }\r\n }\r\n-</script>\n\\ No newline at end of file\n+</script>\r\n+<template>\r\n+  <main class=\"admin-login-page\">\r\n+    <section class=\"admin-login-card\">\r\n+      <div class=\"admin-login-header\">\r\n+  <img\r\n+    src=\"../../assets/sumit-logo.png\"\r\n+    alt=\"SUMIT\"\r\n+    class=\"admin-login-logo\"\r\n+  />\r\n+\r\n+  <p class=\"admin-login-subtitle\">\r\n+    Administratorsko sučelje za upravljanje prostorima,\r\n+    rezervacijama i izvještajima SUMIT zgrade.\r\n+  </p>\r\n+</div>\r\n+      <form\r\n+        class=\"admin-login-form\"\r\n+        @submit.prevent=\"handleLogin\"\r\n+      >\r\n+        <p\r\n+          v-if=\"errorMessage\"\r\n+          class=\"admin-login-error\"\r\n+          role=\"alert\"\r\n+        >\r\n+          {{ errorMessage }}\r\n+        </p>\r\n+\r\n+        <div class=\"admin-login-field\">\r\n+          <label for=\"username\">\r\n+            Korisničko ime\r\n+          </label>\r\n+\r\n+          <input\r\n+            id=\"username\"\r\n+            v-model.trim=\"username\"\r\n+            type=\"text\"\r\n+            autocomplete=\"username\"\r\n+            placeholder=\"Unesite korisničko ime\"\r\n+            required\r\n+            :disabled=\"loading\"\r\n+          />\r\n+        </div>\r\n+\r\n+        <div class=\"admin-login-field\">\r\n+          <label for=\"password\">\r\n+            Lozinka\r\n+          </label>\r\n+\r\n+          <input\r\n+            id=\"password\"\r\n+            v-model=\"password\"\r\n+            type=\"password\"\r\n+            autocomplete=\"current-password\"\r\n+            placeholder=\"Unesite lozinku\"\r\n+            required\r\n+            :disabled=\"loading\"\r\n+          />\r\n+        </div>\r\n+\r\n+        <button\r\n+          class=\"admin-login-button\"\r\n+          type=\"submit\"\r\n+          :disabled=\"loading\"\r\n+        >\r\n+          {{ loading ? 'Prijava...' : 'Prijavi se' }}\r\n+        </button>\r\n+      </form>\r\n+    </section>\r\n+  </main>\r\n+</template>\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1784020809393,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -3,9 +3,9 @@\n import {\r\n   useRoute,\r\n   useRouter,\r\n } from 'vue-router'\r\n-import { login } from '../../services/authService'\r\n+import { login } from '../../services/admin/authService'\r\n \r\n const router = useRouter()\r\n const route = useRoute()\r\n \r\n"
                 }
             ],
             "date": 1783782528965,

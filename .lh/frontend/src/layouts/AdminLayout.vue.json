@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 23,
+            "activePatchIndex": 24,
             "patches": [
                 {
                     "date": 1783782579324,
@@ -100,6 +100,10 @@
                 {
                     "date": 1783954350231,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -20,13 +20,14 @@\n   isMenuOpen.value = false\r\n }\r\n \r\n async function handleLogout() {\r\n-  localStorage.removeItem('admin_token')\r\n+  logout()\r\n   closeMenu()\r\n \r\n   await router.replace('/admin/login')\r\n }\r\n+\r\n </script>\r\n \r\n <template>\r\n   <div class=\"admin-layout\">\r\n"
+                },
+                {
+                    "date": 1784020644067,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -6,9 +6,9 @@\n   useRouter,\r\n } from 'vue-router'\r\n import {\r\n   logout,\r\n-} from '../services/authService'\r\n+} from '../services/admin/authService'\r\n \r\n const router = useRouter()\r\n const isMenuOpen = ref(false)\r\n \r\n"
                 }
             ],
             "date": 1783782579324,

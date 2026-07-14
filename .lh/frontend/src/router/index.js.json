@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 6,
+            "activePatchIndex": 7,
             "patches": [
                 {
                     "date": 1783782672305,
@@ -32,6 +32,10 @@
                 {
                     "date": 1783959907803,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -70,37 +70,21 @@\n   history: createWebHistory(),\r\n   routes,\r\n })\r\n \r\n-router.beforeEach((to) => {\r\n+router.beforeEach(async (to) => {\r\n+  /*\r\n+   * Pri prvom pokretanju aplikacije ili osvježavanju stranice\r\n+   * provjerava se token preko backend rute /admin/me.\r\n+   */\r\n   if (!initialized.value) {\r\n-    async function initializeAuth() {\r\n-  const token = localStorage.getItem(\"token\")\r\n-\r\n-  if (!token) {\r\n-    isAuthenticated.value = false\r\n-    initialized.value = true\r\n-    return\r\n+    await initializeAuth()\r\n   }\r\n \r\n-  try {\r\n-    await axios.get(\"/admin/me\", {\r\n-      headers: {\r\n-        Authorization: `Bearer ${token}`,\r\n-      },\r\n-    })\r\n-\r\n-    isAuthenticated.value = true\r\n-\r\n-  } catch (error) {\r\n-    localStorage.removeItem(\"token\")\r\n-    isAuthenticated.value = false\r\n-  }\r\n-\r\n-  initialized.value = true\r\n-}\r\n-  }\r\n-\r\n+  /*\r\n+   * Prijavljeni administrator ne može ponovno otvoriti\r\n+   * stranicu za prijavu.\r\n+   */\r\n   if (\r\n     to.meta.guestOnly &&\r\n     isAuthenticated.value\r\n   ) {\r\n@@ -108,8 +92,12 @@\n       name: 'admin-dashboard',\r\n     }\r\n   }\r\n \r\n+  /*\r\n+   * Neprijavljeni korisnik ne može pristupiti admin rutama.\r\n+   * Čuva se ruta na koju je pokušao otići.\r\n+   */\r\n   if (\r\n     to.meta.requiresAuth &&\r\n     !isAuthenticated.value\r\n   ) {\r\n"
+                },
+                {
+                    "date": 1784020679889,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -6,9 +6,9 @@\n import {\r\n   initializeAuth,\r\n   initialized,\r\n   isAuthenticated,\r\n-} from '../services/authService'\r\n+} from '../services/admin/authService'\r\n \r\n import HomeView from '../views/public/HomeView.vue'\r\n import AdminLoginView from '../views/admin/AdminLoginView.vue'\r\n import AdminLayout from '../layouts/AdminLayout.vue'\r\n"
                 }
             ],
             "date": 1783782672305,

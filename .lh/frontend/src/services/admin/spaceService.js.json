@@ -1,0 +1,22 @@
+{
+    "sourceFile": "frontend/src/services/admin/spaceService.js",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 1,
+            "patches": [
+                {
+                    "date": 1784021301593,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                },
+                {
+                    "date": 1784021606150,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -4,6 +4,12 @@\n   return api.get('/admin/spaces', { params })\r\n }\r\n \r\n export function getSpaceById(spaceId) {\r\n+  if (!spaceId) {\r\n+    return Promise.reject(\r\n+      new Error('ID prostora nije proslijeđen.'),\r\n+    )\r\n+  }\r\n+\r\n   return api.get(`/admin/spaces/${spaceId}`)\r\n }\n\\ No newline at end of file\n"
+                }
+            ],
+            "date": 1784021301593,
+            "name": "Commit-0",
+            "content": "import api from '../api'\r\n\r\nexport function getSpaces(params = {}) {\r\n  return api.get('/admin/spaces', { params })\r\n}\r\n\r\nexport function getSpaceById(spaceId) {\r\n  return api.get(`/admin/spaces/${spaceId}`)\r\n}"
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "sourceFile": "backend/app/schemas/spaces.py",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1784023775061,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1784023775061,
+            "name": "Commit-0",
+            "content": "from typing import List, Optional\r\n\r\nfrom pydantic import BaseModel, ConfigDict, Field\r\n\r\n\r\nclass SpaceImageCreate(BaseModel):\r\n    url: str\r\n    is_primary: bool = False\r\n\r\n\r\nclass SpaceImageOut(SpaceImageCreate):\r\n    id: int\r\n\r\n    model_config = ConfigDict(from_attributes=True)\r\n\r\n\r\nclass SpaceEquipmentCreate(BaseModel):\r\n    name: str\r\n\r\n\r\nclass SpaceEquipmentOut(SpaceEquipmentCreate):\r\n    id: int\r\n\r\n    model_config = ConfigDict(from_attributes=True)\r\n\r\n\r\nclass SpaceServiceCreate(BaseModel):\r\n    name: str\r\n    name_en: Optional[str] = None\r\n    description: Optional[str] = None\r\n    description_en: Optional[str] = None\r\n    price: float = Field(default=0, ge=0)\r\n    conditions: Optional[str] = None\r\n\r\n\r\nclass SpaceServiceOut(SpaceServiceCreate):\r\n    id: int\r\n\r\n    model_config = ConfigDict(from_attributes=True)\r\n\r\n\r\nclass SpaceCreate(BaseModel):\r\n    name: str = Field(min_length=1, max_length=100)\r\n    description: str = Field(min_length=1)\r\n\r\n    name_en: Optional[str] = Field(\r\n        default=None,\r\n        max_length=100,\r\n    )\r\n    description_en: Optional[str] = None\r\n\r\n    space_type: str\r\n    space_subtype: str\r\n\r\n    capacity: int = Field(ge=1)\r\n    price: float = Field(ge=0)\r\n    price_unit: str\r\n\r\n    is_modular: bool = False\r\n    combination_group: Optional[str] = Field(\r\n        default=None,\r\n        max_length=50,\r\n    )\r\n\r\n    images: List[SpaceImageCreate] = []\r\n    equipment: List[SpaceEquipmentCreate] = []\r\n    services: List[SpaceServiceCreate] = []\r\n\r\n\r\nclass SpaceOut(BaseModel):\r\n    id: int\r\n\r\n    name: str\r\n    description: str\r\n    name_en: Optional[str]\r\n    description_en: Optional[str]\r\n\r\n    space_type: str\r\n    space_subtype: str\r\n\r\n    capacity: int\r\n    price: float\r\n    price_unit: str\r\n\r\n    is_modular: bool\r\n    combination_group: Optional[str]\r\n\r\n    images: List[SpaceImageOut]\r\n    equipment: List[SpaceEquipmentOut]\r\n    services: List[SpaceServiceOut]\r\n\r\n    model_config = ConfigDict(from_attributes=True)"
+        }
+    ]
+}
