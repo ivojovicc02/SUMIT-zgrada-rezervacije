@@ -3,7 +3,7 @@
     "activeCommit": 0,
     "commits": [
         {
-            "activePatchIndex": 4,
+            "activePatchIndex": 8,
             "patches": [
                 {
                     "date": 1783954013479,
@@ -24,6 +24,22 @@
                 {
                     "date": 1784027186913,
                     "content": "Index: \n===================================================================\n--- \n+++ \n@@ -17,8 +17,7 @@\n     allow_methods=[\"*\"],\r\n     allow_headers=[\"*\"],\r\n )\r\n \r\n-app.include_router(spaces.router)\r\n app.include_router(reservations.router)\r\n app.include_router(admin.router)\r\n app.include_router(availability.router)\n\\ No newline at end of file\n"
+                },
+                {
+                    "date": 1784028918626,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -1,8 +1,10 @@\n from fastapi import FastAPI\r\n from app.database import Base, engine\r\n from app.routers import reservations, admin, availability\r\n from fastapi.middleware.cors import CORSMiddleware\r\n+import os\r\n+from fastapi.staticfiles import StaticFiles\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n \r\n app = FastAPI(title=\"SUMIT Rezervacije\")\r\n"
+                },
+                {
+                    "date": 1784028939066,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,8 +5,10 @@\n import os\r\n from fastapi.staticfiles import StaticFiles\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n+UPLOAD_DIR = \"uploads\"\r\n+os.makedirs(UPLOAD_DIR, exist_ok=True)\r\n \r\n app = FastAPI(title=\"SUMIT Rezervacije\")\r\n \r\n app.add_middleware(\r\n"
+                },
+                {
+                    "date": 1784028950041,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -10,8 +10,13 @@\n os.makedirs(UPLOAD_DIR, exist_ok=True)\r\n \r\n app = FastAPI(title=\"SUMIT Rezervacije\")\r\n \r\n+app.mount(\r\n+    \"/uploads\",\r\n+    StaticFiles(directory=UPLOAD_DIR),\r\n+    name=\"uploads\",\r\n+)\r\n app.add_middleware(\r\n     CORSMiddleware,\r\n     allow_origins=[\r\n         \"http://localhost:5173\",\r\n"
+                },
+                {
+                    "date": 1784028980776,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n@@ -5,18 +5,20 @@\n import os\r\n from fastapi.staticfiles import StaticFiles\r\n \r\n Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje\r\n+\r\n+app = FastAPI(title=\"SUMIT Rezervacije\")\r\n+\r\n UPLOAD_DIR = \"uploads\"\r\n os.makedirs(UPLOAD_DIR, exist_ok=True)\r\n \r\n-app = FastAPI(title=\"SUMIT Rezervacije\")\r\n-\r\n app.mount(\r\n     \"/uploads\",\r\n     StaticFiles(directory=UPLOAD_DIR),\r\n     name=\"uploads\",\r\n )\r\n+\r\n app.add_middleware(\r\n     CORSMiddleware,\r\n     allow_origins=[\r\n         \"http://localhost:5173\",\r\n"
                 }
             ],
             "date": 1783954013479,

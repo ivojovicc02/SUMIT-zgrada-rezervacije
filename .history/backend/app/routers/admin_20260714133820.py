@@ -1,9 +1,7 @@
 from datetime import datetime
 import os
 from typing import List, Optional
-import shutil
-from pathlib import Path
-from uuid import uuid4
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -45,117 +43,6 @@ from app.services.auth import (
 from app.services.email import send_cancellation_email
 from app.services.google_calendar import delete_calendar_event
 router = APIRouter(prefix="/admin", tags=["Administracija"])
-
-ALLOWED_IMAGE_TYPES = {
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-}
-
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
-
-UPLOAD_ROOT = Path("uploads/spaces")
-UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
-
-@router.post(
-    "/spaces/{space_id}/images",
-    status_code=status.HTTP_201_CREATED,
-)
-async def upload_space_image(
-    space_id: int,
-    image: UploadFile = File(...),
-    is_primary: bool = False,
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    space = (
-        db.query(Space)
-        .filter(Space.id == space_id)
-        .first()
-    )
-
-    if not space:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Prostor nije pronađen.",
-        )
-
-    if image.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Dozvoljeni formati su JPG, PNG i WEBP.",
-        )
-
-    image.file.seek(0, os.SEEK_END)
-    file_size = image.file.tell()
-    image.file.seek(0)
-
-    if file_size > MAX_IMAGE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Slika ne smije biti veća od 5 MB.",
-        )
-
-    original_suffix = Path(image.filename or "").suffix.lower()
-
-    if original_suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Neispravna ekstenzija slike.",
-        )
-
-    space_directory = UPLOAD_ROOT / str(space_id)
-    space_directory.mkdir(parents=True, exist_ok=True)
-
-    generated_filename = f"{uuid4().hex}{original_suffix}"
-    file_path = space_directory / generated_filename
-
-    try:
-        with file_path.open("wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-
-        if is_primary:
-            db.query(SpaceImage).filter(
-                SpaceImage.space_id == space_id,
-                SpaceImage.is_primary == True,
-            ).update(
-                {"is_primary": False},
-                synchronize_session=False,
-            )
-
-        relative_url = (
-            f"/uploads/spaces/{space_id}/{generated_filename}"
-        )
-
-        db_image = SpaceImage(
-            space_id=space_id,
-            url=relative_url,
-            is_primary=is_primary,
-        )
-
-        db.add(db_image)
-        db.commit()
-        db.refresh(db_image)
-
-        return {
-            "message": "Slika je uspješno spremljena.",
-            "image": {
-                "id": db_image.id,
-                "url": db_image.url,
-                "is_primary": db_image.is_primary,
-            },
-        }
-
-    except Exception:
-        db.rollback()
-
-        if file_path.exists():
-            file_path.unlink()
-
-        raise
-
-    finally:
-        await image.close()
 
 @router.get("/me")
 def get_me(

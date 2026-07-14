@@ -130,7 +130,7 @@ async def upload_space_image(
         db_image = SpaceImage(
             space_id=space_id,
             url=relative_url,
-            is_primary=is_primary,
+            is_primary=1 if is_primary else 0,
         )
 
         db.add(db_image)

@@ -117,9 +117,9 @@ async def upload_space_image(
         if is_primary:
             db.query(SpaceImage).filter(
                 SpaceImage.space_id == space_id,
-                SpaceImage.is_primary == True,
+                SpaceImage.is_primary == 1,
             ).update(
-                {"is_primary": False},
+                {"is_primary": 0},
                 synchronize_session=False,
             )
 
@@ -130,7 +130,7 @@ async def upload_space_image(
         db_image = SpaceImage(
             space_id=space_id,
             url=relative_url,
-            is_primary=is_primary,
+            is_primary=1 if is_primary else 0,
         )
 
         db.add(db_image)

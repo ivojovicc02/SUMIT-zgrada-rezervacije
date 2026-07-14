@@ -9,15 +9,6 @@ Base.metadata.create_all(bind=engine)  # kreira tablice ako ne postoje
 
 app = FastAPI(title="SUMIT Rezervacije")
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-app.mount(
-    "/uploads",
-    StaticFiles(directory=UPLOAD_DIR),
-    name="uploads",
-)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

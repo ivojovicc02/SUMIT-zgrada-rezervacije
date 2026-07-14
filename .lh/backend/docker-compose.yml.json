@@ -1,0 +1,18 @@
+{
+    "sourceFile": "backend/docker-compose.yml",
+    "activeCommit": 0,
+    "commits": [
+        {
+            "activePatchIndex": 0,
+            "patches": [
+                {
+                    "date": 1784029023044,
+                    "content": "Index: \n===================================================================\n--- \n+++ \n"
+                }
+            ],
+            "date": 1784029023044,
+            "name": "Commit-0",
+            "content": "services:\r\n  db:\r\n    image: postgres:16-alpine\r\n    restart: unless-stopped\r\n    environment:\r\n      POSTGRES_DB: sumit_rezervacije\r\n      POSTGRES_USER: sumit_user\r\n      POSTGRES_PASSWORD: changeme123\r\n    volumes:\r\n      - postgres_data:/var/lib/postgresql/data\r\n    ports:\r\n      - \"5432:5432\"\r\n\r\n  pgadmin:\r\n    image: dpage/pgadmin4:latest\r\n    restart: unless-stopped\r\n    environment:\r\n      PGADMIN_DEFAULT_EMAIL: admin@sumit.ba\r\n      PGADMIN_DEFAULT_PASSWORD: admin123\r\n    ports:\r\n      - \"5050:80\"\r\n    depends_on:\r\n      - db\r\n\r\n  api:\r\n    build: .\r\n    restart: unless-stopped\r\n    ports:\r\n      - \"8000:8000\"\r\n    env_file:\r\n      - .env\r\n    depends_on:\r\n      - db\r\n    volumes:\r\n      - ./credentials.json:/app/credentials.json\r\n      - ./uploads:/app/uploads\r\n\r\nvolumes:\r\n  postgres_data:\r\n"
+        }
+    ]
+}
