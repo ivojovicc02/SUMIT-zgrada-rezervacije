@@ -127,7 +127,3 @@ async function handleLogin() {
   </main>
 </template>
 
-<style
-  scoped
-  src="../../styles/admin/admin-login.css"
-></style>
