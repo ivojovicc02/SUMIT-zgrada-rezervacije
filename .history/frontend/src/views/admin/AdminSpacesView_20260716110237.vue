@@ -3,17 +3,10 @@ import { computed, onMounted, ref } from 'vue'
 import {
   getSpaces,
   deleteSpaceById,
+  getSpaceById,
 } from '../../services/admin/spaceService'
 import SpaceCreateModal from '../../components/admin/SpaceCreateModal.vue'
 import SpaceDetailsModal from '../../components/admin/SpaceDetailsModal.vue'
-import {
-  getPrimarySpaceImage,
-  formatPrice,
-  formatSpacePriceUnit,
-  formatSpaceSubtype,
-  formatSpaceType,
-  fallbackSpaceImage,
-} from '../../utils/spaceFormatters'
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -25,10 +18,46 @@ const errorMessage = ref('')
 const deletingSpaceId = ref(null)
 const isCreateModalOpen = ref(false)
 
-function handleImageError(event) {
-  if (event.target.src !== fallbackSpaceImage) {
-    event.target.src = fallbackSpaceImage
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://127.0.0.1:8000'
+
+const fallbackImage =
+  'https://placehold.co/240x160?text=Nema+slike'
+
+function getImageUrl(url) {
+  if (!url) {
+    return fallbackImage
   }
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url
+  }
+
+  const normalizedUrl = url.startsWith('/')
+    ? url
+    : `/${url}`
+
+  return `${API_BASE_URL}${normalizedUrl}`
+}
+
+function getPrimaryImage(space) {
+  if (!Array.isArray(space.images)) {
+    return fallbackImage
+  }
+
+  const primaryImage = space.images.find(
+    (image) => image.is_primary === true
+  )
+
+  const imagePath =
+    primaryImage?.url ||
+    space.images[0]?.url
+
+  return getImageUrl(imagePath)
 }
 
 async function fetchSpaces() {
@@ -100,6 +129,12 @@ const totalCapacity = computed(() => {
   }, 0)
 })
 
+const modularSpacesCount = computed(() => {
+  return spaces.value.filter(
+    (space) => space.is_modular === true,
+  ).length
+})
+
 const availableSpaceTypes = computed(() => {
   const types = spaces.value
     .map((space) => space.space_type)
@@ -125,6 +160,39 @@ const availableSpaceSubtypes = computed(() => {
     .sort()
 })
 
+function handleImageError(event) {
+  event.target.src = fallbackImage
+}
+
+function formatSpaceType(spaceType) {
+  const typeLabels = {
+    office_workspace: 'Uredi i radni prostori',
+    conference: 'Konferencijske dvorane',
+    outdoor: 'Vanjski prostori i park',
+  }
+
+  return typeLabels[spaceType] || spaceType || 'Nije definirano'
+}
+
+function formatSpaceSubtype(spaceSubtype) {
+  const subtypeLabels = {
+    private_office: 'Privatni ured',
+    permanent_workspace: 'Stalno radno mjesto',
+    flexible_package: 'Fleksibilni paket',
+    virtual_office: 'Virtualni ured',
+    meeting_room: 'Sala za sastanke',
+    conference_hall: 'Konferencijska dvorana',
+    terrace: 'Terasa',
+    green_park: 'Zeleni park',
+  }
+
+  return (
+    subtypeLabels[spaceSubtype] ||
+    spaceSubtype ||
+    'Nije definirano'
+  )
+}
+
 const averagePrice = computed(() => {
   if (spaces.value.length === 0) {
     return '0,00'
@@ -142,6 +210,30 @@ const averagePrice = computed(() => {
     maximumFractionDigits: 2,
   })
 })
+
+function formatPriceUnit(priceUnit) {
+  const unitLabels = {
+    hour: 'po satu',
+    day: 'po danu',
+    month: 'mjesečno',
+    reservation: 'po rezervaciji',
+  }
+
+  return unitLabels[priceUnit] || priceUnit || ''
+}
+
+function formatPrice(price) {
+  const numericPrice = Number(price)
+
+  if (Number.isNaN(numericPrice)) {
+    return '0,00'
+  }
+
+  return new Intl.NumberFormat('hr-HR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numericPrice)
+}
 
 function getEquipmentTitle(space) {
   if (!Array.isArray(space.equipment)) {
@@ -417,7 +509,7 @@ function closeSpaceDetails() {
                 <div class="space-info">
                   <img
                     class="space-image"
-                    :src="getPrimarySpaceImage(space)"
+                    :src="getPrimaryImage(space)"
                     :alt="space.name"
                     @error="handleImageError"
                   />
@@ -499,7 +591,11 @@ function closeSpaceDetails() {
                   </strong>
 
                   <span>
-                    {{ formatSpacePriceUnit(space.price_unit) }}
+                    {{
+                      formatPriceUnit(
+                        space.price_unit,
+                      )
+                    }}
                   </span>
                 </div>
               </td>
@@ -651,11 +747,164 @@ function closeSpaceDetails() {
       </footer>
     </div>
   </section>
-<SpaceDetailsModal
-  :is-open="isDetailsModalOpen"
-  :space="selectedSpace"
-  @close="closeSpaceDetails"
-/>
+
+  <Teleport to="body">
+  <div
+    v-if="isDetailsModalOpen && selectedSpace"
+    class="modal-overlay"
+    @click.self="closeSpaceDetails"
+  >
+    <div
+      class="space-details-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="space-details-title"
+    >
+      <header class="modal-header">
+        <div>
+          <div class="modal-title-row">
+            <h2 id="space-details-title">
+              {{ selectedSpace.name }}
+            </h2>
+
+            <span
+              v-if="selectedSpace.is_modular"
+              class="modular-badge"
+            >
+              Modularna
+            </span>
+          </div>
+
+          <p>
+            {{ formatSpaceSubtype(selectedSpace.space_subtype) }}
+          </p>
+        </div>
+
+        <button
+          class="modal-close-button"
+          type="button"
+          aria-label="Zatvori"
+          @click="closeSpaceDetails"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="modal-content">
+        <img
+          class="details-main-image"
+          :src="getPrimaryImage(selectedSpace)"
+          :alt="selectedSpace.name"
+          @error="handleImageError"
+        />
+
+        <section class="details-section">
+          <h3>Opis</h3>
+          <p>{{ selectedSpace.description }}</p>
+        </section>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span>Glavna kategorija</span>
+            <strong>
+              {{ formatSpaceType(selectedSpace.space_type) }}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Podvrsta</span>
+            <strong>
+              {{ formatSpaceSubtype(selectedSpace.space_subtype) }}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Kapacitet</span>
+            <strong>
+              {{ selectedSpace.capacity }} osoba
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Cijena</span>
+            <strong>
+              {{ formatPrice(selectedSpace.price) }} KM
+              {{ formatPriceUnit(selectedSpace.price_unit) }}
+            </strong>
+          </div>
+        </div>
+
+        <section class="details-section">
+          <h3>Oprema</h3>
+
+          <div
+            v-if="selectedSpace.equipment?.length"
+            class="details-tags"
+          >
+            <span
+              v-for="equipment in selectedSpace.equipment"
+              :key="equipment.id || equipment.name"
+              class="equipment-badge"
+            >
+              {{ equipment.name }}
+            </span>
+          </div>
+
+          <p v-else>Nema navedene opreme.</p>
+        </section>
+
+        <section class="details-section">
+          <h3>Dodatne usluge</h3>
+
+          <div
+            v-if="selectedSpace.services?.length"
+            class="services-list"
+          >
+            <article
+              v-for="service in selectedSpace.services"
+              :key="service.id || service.name"
+              class="service-card"
+            >
+              <div>
+                <strong>{{ service.name }}</strong>
+                <p v-if="service.description">
+                  {{ service.description }}
+                </p>
+              </div>
+
+              <span>
+                {{ formatPrice(service.price) }} KM
+              </span>
+
+              <small v-if="service.conditions">
+                {{ service.conditions }}
+              </small>
+            </article>
+          </div>
+
+          <p v-else>Nema dodatnih usluga.</p>
+        </section>
+
+        <section
+          v-if="selectedSpace.images?.length > 1"
+          class="details-section"
+        >
+          <h3>Galerija</h3>
+
+          <div class="details-gallery">
+            <img
+              v-for="image in selectedSpace.images"
+              :key="image.id || image.url"
+              :src="getImageUrl(image.url)"
+              :alt="selectedSpace.name"
+              @error="handleImageError"
+            />
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Teleport>
 <SpaceCreateModal
   :is-open="isCreateModalOpen"
   @close="closeCreateSpace"

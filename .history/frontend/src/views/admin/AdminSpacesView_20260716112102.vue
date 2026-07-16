@@ -100,6 +100,12 @@ const totalCapacity = computed(() => {
   }, 0)
 })
 
+const modularSpacesCount = computed(() => {
+  return spaces.value.filter(
+    (space) => space.is_modular === true,
+  ).length
+})
+
 const availableSpaceTypes = computed(() => {
   const types = spaces.value
     .map((space) => space.space_type)

@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import {
   getSpaces,
   deleteSpaceById,
+  getSpaceById,
 } from '../../services/admin/spaceService'
 import SpaceCreateModal from '../../components/admin/SpaceCreateModal.vue'
 import SpaceDetailsModal from '../../components/admin/SpaceDetailsModal.vue'
@@ -98,6 +99,12 @@ const totalCapacity = computed(() => {
   return spaces.value.reduce((sum, space) => {
     return sum + Number(space.capacity || 0)
   }, 0)
+})
+
+const modularSpacesCount = computed(() => {
+  return spaces.value.filter(
+    (space) => space.is_modular === true,
+  ).length
 })
 
 const availableSpaceTypes = computed(() => {

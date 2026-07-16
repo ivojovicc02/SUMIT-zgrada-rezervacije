@@ -3,17 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import {
   getSpaces,
   deleteSpaceById,
+  getSpaceById,
 } from '../../services/admin/spaceService'
 import SpaceCreateModal from '../../components/admin/SpaceCreateModal.vue'
-import SpaceDetailsModal from '../../components/admin/SpaceDetailsModal.vue'
-import {
-  getPrimarySpaceImage,
-  formatPrice,
-  formatSpacePriceUnit,
-  formatSpaceSubtype,
-  formatSpaceType,
-  fallbackSpaceImage,
-} from '../../utils/spaceFormatters'
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -25,10 +17,47 @@ const errorMessage = ref('')
 const deletingSpaceId = ref(null)
 const isCreateModalOpen = ref(false)
 
-function handleImageError(event) {
-  if (event.target.src !== fallbackSpaceImage) {
-    event.target.src = fallbackSpaceImage
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://127.0.0.1:8000'
+
+const fallbackImage =
+  'https://placehold.co/240x160?text=Nema+slike'
+
+function getImageUrl(url) {
+  if (!url) {
+    return fallbackImage
   }
+
+  if (
+    url.startsWith('http://') ||
+    url.startsWith('https://')
+  ) {
+    return url
+  }
+
+  const normalizedUrl = url.startsWith('/')
+    ? url
+    : `/${url}`
+
+  return `${API_BASE_URL}${normalizedUrl}`
+}
+
+function getPrimaryImage(space) {
+  if (!Array.isArray(space.images)) {
+    return fallbackImage
+  }
+
+  const primaryImage = space.images.find(
+    (image) => image.is_primary === true
+  )
+
+  const imagePath =
+    primaryImage?.url ||
+    space.images[0]?.url
+
+  return getImageUrl(imagePath)
 }
 
 async function fetchSpaces() {
@@ -100,6 +129,12 @@ const totalCapacity = computed(() => {
   }, 0)
 })
 
+const modularSpacesCount = computed(() => {
+  return spaces.value.filter(
+    (space) => space.is_modular === true,
+  ).length
+})
+
 const availableSpaceTypes = computed(() => {
   const types = spaces.value
     .map((space) => space.space_type)
@@ -125,6 +160,39 @@ const availableSpaceSubtypes = computed(() => {
     .sort()
 })
 
+function handleImageError(event) {
+  event.target.src = fallbackImage
+}
+
+function formatSpaceType(spaceType) {
+  const typeLabels = {
+    office_workspace: 'Uredi i radni prostori',
+    conference: 'Konferencijske dvorane',
+    outdoor: 'Vanjski prostori i park',
+  }
+
+  return typeLabels[spaceType] || spaceType || 'Nije definirano'
+}
+
+function formatSpaceSubtype(spaceSubtype) {
+  const subtypeLabels = {
+    private_office: 'Privatni ured',
+    permanent_workspace: 'Stalno radno mjesto',
+    flexible_package: 'Fleksibilni paket',
+    virtual_office: 'Virtualni ured',
+    meeting_room: 'Sala za sastanke',
+    conference_hall: 'Konferencijska dvorana',
+    terrace: 'Terasa',
+    green_park: 'Zeleni park',
+  }
+
+  return (
+    subtypeLabels[spaceSubtype] ||
+    spaceSubtype ||
+    'Nije definirano'
+  )
+}
+
 const averagePrice = computed(() => {
   if (spaces.value.length === 0) {
     return '0,00'
@@ -142,6 +210,30 @@ const averagePrice = computed(() => {
     maximumFractionDigits: 2,
   })
 })
+
+function formatPriceUnit(priceUnit) {
+  const unitLabels = {
+    hour: 'po satu',
+    day: 'po danu',
+    month: 'mjesečno',
+    reservation: 'po rezervaciji',
+  }
+
+  return unitLabels[priceUnit] || priceUnit || ''
+}
+
+function formatPrice(price) {
+  const numericPrice = Number(price)
+
+  if (Number.isNaN(numericPrice)) {
+    return '0,00'
+  }
+
+  return new Intl.NumberFormat('hr-HR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numericPrice)
+}
 
 function getEquipmentTitle(space) {
   if (!Array.isArray(space.equipment)) {
@@ -166,15 +258,17 @@ function getServicesTitle(space) {
 }
 
 function openCreateSpace() {
+  createErrorMessage.value = ''
   isCreateModalOpen.value = true
 }
 
 function closeCreateSpace() {
-  isCreateModalOpen.value = false
-}
+  if (isCreatingSpace.value) {
+    return
+  }
 
-async function handleSpaceCreated() {
-  await fetchSpaces()
+  isCreateModalOpen.value = false
+  resetCreateForm()
 }
 
 function editSpace(space) {
@@ -417,7 +511,7 @@ function closeSpaceDetails() {
                 <div class="space-info">
                   <img
                     class="space-image"
-                    :src="getPrimarySpaceImage(space)"
+                    :src="getPrimaryImage(space)"
                     :alt="space.name"
                     @error="handleImageError"
                   />
@@ -499,7 +593,11 @@ function closeSpaceDetails() {
                   </strong>
 
                   <span>
-                    {{ formatSpacePriceUnit(space.price_unit) }}
+                    {{
+                      formatPriceUnit(
+                        space.price_unit,
+                      )
+                    }}
                   </span>
                 </div>
               </td>
@@ -651,14 +749,482 @@ function closeSpaceDetails() {
       </footer>
     </div>
   </section>
-<SpaceDetailsModal
-  :is-open="isDetailsModalOpen"
-  :space="selectedSpace"
-  @close="closeSpaceDetails"
-/>
-<SpaceCreateModal
-  :is-open="isCreateModalOpen"
-  @close="closeCreateSpace"
-  @created="handleSpaceCreated"
-/>
+
+  <Teleport to="body">
+  <div
+    v-if="isDetailsModalOpen && selectedSpace"
+    class="modal-overlay"
+    @click.self="closeSpaceDetails"
+  >
+    <div
+      class="space-details-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="space-details-title"
+    >
+      <header class="modal-header">
+        <div>
+          <div class="modal-title-row">
+            <h2 id="space-details-title">
+              {{ selectedSpace.name }}
+            </h2>
+
+            <span
+              v-if="selectedSpace.is_modular"
+              class="modular-badge"
+            >
+              Modularna
+            </span>
+          </div>
+
+          <p>
+            {{ formatSpaceSubtype(selectedSpace.space_subtype) }}
+          </p>
+        </div>
+
+        <button
+          class="modal-close-button"
+          type="button"
+          aria-label="Zatvori"
+          @click="closeSpaceDetails"
+        >
+          ×
+        </button>
+      </header>
+
+      <div class="modal-content">
+        <img
+          class="details-main-image"
+          :src="getPrimaryImage(selectedSpace)"
+          :alt="selectedSpace.name"
+          @error="handleImageError"
+        />
+
+        <section class="details-section">
+          <h3>Opis</h3>
+          <p>{{ selectedSpace.description }}</p>
+        </section>
+
+        <div class="details-grid">
+          <div class="detail-item">
+            <span>Glavna kategorija</span>
+            <strong>
+              {{ formatSpaceType(selectedSpace.space_type) }}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Podvrsta</span>
+            <strong>
+              {{ formatSpaceSubtype(selectedSpace.space_subtype) }}
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Kapacitet</span>
+            <strong>
+              {{ selectedSpace.capacity }} osoba
+            </strong>
+          </div>
+
+          <div class="detail-item">
+            <span>Cijena</span>
+            <strong>
+              {{ formatPrice(selectedSpace.price) }} KM
+              {{ formatPriceUnit(selectedSpace.price_unit) }}
+            </strong>
+          </div>
+        </div>
+
+        <section class="details-section">
+          <h3>Oprema</h3>
+
+          <div
+            v-if="selectedSpace.equipment?.length"
+            class="details-tags"
+          >
+            <span
+              v-for="equipment in selectedSpace.equipment"
+              :key="equipment.id || equipment.name"
+              class="equipment-badge"
+            >
+              {{ equipment.name }}
+            </span>
+          </div>
+
+          <p v-else>Nema navedene opreme.</p>
+        </section>
+
+        <section class="details-section">
+          <h3>Dodatne usluge</h3>
+
+          <div
+            v-if="selectedSpace.services?.length"
+            class="services-list"
+          >
+            <article
+              v-for="service in selectedSpace.services"
+              :key="service.id || service.name"
+              class="service-card"
+            >
+              <div>
+                <strong>{{ service.name }}</strong>
+                <p v-if="service.description">
+                  {{ service.description }}
+                </p>
+              </div>
+
+              <span>
+                {{ formatPrice(service.price) }} KM
+              </span>
+
+              <small v-if="service.conditions">
+                {{ service.conditions }}
+              </small>
+            </article>
+          </div>
+
+          <p v-else>Nema dodatnih usluga.</p>
+        </section>
+
+        <section
+          v-if="selectedSpace.images?.length > 1"
+          class="details-section"
+        >
+          <h3>Galerija</h3>
+
+          <div class="details-gallery">
+            <img
+              v-for="image in selectedSpace.images"
+              :key="image.id || image.url"
+              :src="getImageUrl(image.url)"
+              :alt="selectedSpace.name"
+              @error="handleImageError"
+            />
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Teleport>
+<Teleport to="body">
+  <div
+    v-if="isCreateModalOpen"
+    class="modal-overlay"
+    @click.self="closeCreateSpace"
+  >
+    <div
+      class="space-create-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-space-title"
+    >
+      <header class="modal-header">
+        <div>
+          <h2 id="create-space-title">
+            Dodaj novi prostor
+          </h2>
+
+          <p>
+            Unesite osnovne podatke, opremu i slike
+            prostora.
+          </p>
+        </div>
+
+        <button
+          class="modal-close-button"
+          type="button"
+          aria-label="Zatvori"
+          :disabled="isCreatingSpace"
+          @click="closeCreateSpace"
+        >
+          ×
+        </button>
+      </header>
+
+      <form
+        class="create-space-form"
+        @submit.prevent="submitCreateSpace"
+      >
+        <div class="create-modal-content">
+          <section class="form-section">
+            <h3>Osnovni podaci</h3>
+
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Naziv *</span>
+
+                <input
+                  v-model="createForm.name"
+                  type="text"
+                  maxlength="100"
+                  required
+                />
+              </label>
+
+              <label class="form-field">
+                <span>Naziv na engleskom</span>
+
+                <input
+                  v-model="createForm.name_en"
+                  type="text"
+                  maxlength="100"
+                />
+              </label>
+
+              <label class="form-field form-field--full">
+                <span>Opis *</span>
+
+                <textarea
+                  v-model="createForm.description"
+                  rows="4"
+                  required
+                ></textarea>
+              </label>
+
+              <label class="form-field form-field--full">
+                <span>Opis na engleskom</span>
+
+                <textarea
+                  v-model="createForm.description_en"
+                  rows="4"
+                ></textarea>
+              </label>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h3>Vrsta i cijena</h3>
+
+            <div class="form-grid">
+              <label class="form-field">
+                <span>Glavna kategorija *</span>
+
+                <select
+                  v-model="createForm.space_type"
+                  required
+                  @change="handleSpaceTypeChange"
+                >
+                  <option value="" disabled>
+                    Odaberite kategoriju
+                  </option>
+
+                  <option value="office_workspace">
+                    Uredi i radni prostori
+                  </option>
+
+                  <option value="conference">
+                    Konferencijske dvorane
+                  </option>
+
+                  <option value="outdoor">
+                    Vanjski prostori
+                  </option>
+                </select>
+              </label>
+
+              <label class="form-field">
+                <span>Podvrsta *</span>
+
+                <select
+                  v-model="createForm.space_subtype"
+                  required
+                  :disabled="!createForm.space_type"
+                >
+                  <option value="" disabled>
+                    Odaberite podvrstu
+                  </option>
+
+                  <option
+                    v-for="option in subtypeOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </label>
+
+              <label class="form-field">
+                <span>Kapacitet *</span>
+
+                <input
+                  v-model.number="createForm.capacity"
+                  type="number"
+                  min="1"
+                  required
+                />
+              </label>
+
+              <label class="form-field">
+                <span>Cijena *</span>
+
+                <input
+                  v-model.number="createForm.price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </label>
+
+              <label class="form-field">
+                <span>Jedinica naplate *</span>
+
+                <select
+                  v-model="createForm.price_unit"
+                  required
+                >
+                  <option value="hour">Po satu</option>
+                  <option value="day">Po danu</option>
+                  <option value="month">Mjesečno</option>
+
+                  <option value="reservation">
+                    Po rezervaciji
+                  </option>
+                </select>
+              </label>
+            </div>
+
+            <label
+              v-if="createForm.space_type === 'conference'"
+              class="checkbox-field"
+            >
+              <input
+                v-model="createForm.is_modular"
+                type="checkbox"
+              />
+
+              <span>Modularna konferencijska dvorana</span>
+            </label>
+          </section>
+
+          <section class="form-section">
+            <h3>Oprema</h3>
+
+            <div class="equipment-input-row">
+              <input
+                v-model="newEquipmentName"
+                type="text"
+                placeholder="Primjer: Projektor"
+                @keydown.enter.prevent="addEquipment"
+              />
+
+              <button
+                type="button"
+                class="secondary-button"
+                @click="addEquipment"
+              >
+                Dodaj
+              </button>
+            </div>
+
+            <div
+              v-if="createForm.equipment.length"
+              class="selected-equipment-list"
+            >
+              <span
+                v-for="(equipment, index) in createForm.equipment"
+                :key="`${equipment.name}-${index}`"
+                class="selected-equipment-item"
+              >
+                {{ equipment.name }}
+
+                <button
+                  type="button"
+                  aria-label="Ukloni opremu"
+                  @click="removeEquipment(index)"
+                >
+                  ×
+                </button>
+              </span>
+            </div>
+
+            <p v-else class="form-help-text">
+              Oprema nije obavezna.
+            </p>
+          </section>
+
+          <section class="form-section">
+            <h3>Slike</h3>
+
+            <label class="file-upload-field">
+              <span>Odaberite JPG, PNG ili WEBP slike</span>
+
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+                @change="handleFilesSelected"
+              />
+            </label>
+
+            <div
+              v-if="selectedFiles.length"
+              class="selected-files-list"
+            >
+              <label
+                v-for="(file, index) in selectedFiles"
+                :key="`${file.name}-${index}`"
+                class="selected-file-item"
+              >
+                <input
+                  v-model.number="primaryImageIndex"
+                  type="radio"
+                  name="primary-image"
+                  :value="index"
+                />
+
+                <span>
+                  {{ file.name }}
+                </span>
+
+                <small>
+                  {{
+                    (file.size / 1024 / 1024).toFixed(2)
+                  }}
+                  MB
+                </small>
+              </label>
+
+              <p class="form-help-text">
+                Označena slika bit će glavna.
+              </p>
+            </div>
+          </section>
+
+          <p
+            v-if="createErrorMessage"
+            class="create-form-error"
+          >
+            {{ createErrorMessage }}
+          </p>
+        </div>
+
+        <footer class="create-modal-footer">
+          <button
+            type="button"
+            class="secondary-button"
+            :disabled="isCreatingSpace"
+            @click="closeCreateSpace"
+          >
+            Odustani
+          </button>
+
+          <button
+            type="submit"
+            class="primary-button"
+            :disabled="isCreatingSpace"
+          >
+            {{
+              isCreatingSpace
+                ? 'Spremanje...'
+                : 'Spremi prostor'
+            }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+</Teleport>
 </template>

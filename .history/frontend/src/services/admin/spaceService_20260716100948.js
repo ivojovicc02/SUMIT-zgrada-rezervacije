@@ -4,10 +4,6 @@ export function getSpaces(params = {}) {
   return api.get('/admin/spaces', { params })
 }
 
-export function createSpace(spaceData) {
-  return api.post('/admin/spaces', spaceData)
-}
-
 export function getSpaceById(spaceId) {
   if (!spaceId) {
     return Promise.reject(

@@ -3,17 +3,10 @@ import { computed, onMounted, ref } from 'vue'
 import {
   getSpaces,
   deleteSpaceById,
+  getSpaceById,
 } from '../../services/admin/spaceService'
 import SpaceCreateModal from '../../components/admin/SpaceCreateModal.vue'
 import SpaceDetailsModal from '../../components/admin/SpaceDetailsModal.vue'
-import {
-  getPrimarySpaceImage,
-  formatPrice,
-  formatSpacePriceUnit,
-  formatSpaceSubtype,
-  formatSpaceType,
-  fallbackSpaceImage,
-} from '../../utils/spaceFormatters'
 
 const searchQuery = ref('')
 const selectedCategory = ref('')
@@ -24,12 +17,6 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const deletingSpaceId = ref(null)
 const isCreateModalOpen = ref(false)
-
-function handleImageError(event) {
-  if (event.target.src !== fallbackSpaceImage) {
-    event.target.src = fallbackSpaceImage
-  }
-}
 
 async function fetchSpaces() {
   isLoading.value = true
@@ -100,6 +87,12 @@ const totalCapacity = computed(() => {
   }, 0)
 })
 
+const modularSpacesCount = computed(() => {
+  return spaces.value.filter(
+    (space) => space.is_modular === true,
+  ).length
+})
+
 const availableSpaceTypes = computed(() => {
   const types = spaces.value
     .map((space) => space.space_type)
@@ -124,6 +117,11 @@ const availableSpaceSubtypes = computed(() => {
     )
     .sort()
 })
+
+function handleImageError(event) {
+  event.target.src = fallbackImage
+}
+
 
 const averagePrice = computed(() => {
   if (spaces.value.length === 0) {
@@ -417,7 +415,7 @@ function closeSpaceDetails() {
                 <div class="space-info">
                   <img
                     class="space-image"
-                    :src="getPrimarySpaceImage(space)"
+                    :src="getPrimaryImage(space)"
                     :alt="space.name"
                     @error="handleImageError"
                   />
