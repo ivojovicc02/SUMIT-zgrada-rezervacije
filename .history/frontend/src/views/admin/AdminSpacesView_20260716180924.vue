@@ -128,7 +128,6 @@ const availableSubcategories = computed(() => {
         ) === index,
     )
 })
-
 const averagePrice = computed(() => {
   if (spaces.value.length === 0) {
     return '0,00'
@@ -332,40 +331,40 @@ function closeSpaceDetails() {
         </div>
 
         <div class="filters">
-           <select
-              v-model="selectedCategory"
-              aria-label="Kategorija prostora"
-              @change="selectedSubtype = ''"
-            >
-              <option value="">
-                Sve kategorije
-              </option>
-
-              <option
-                v-for="category in availableCategories"
-                :key="category.id"
-                :value="category.id"
-              >
-                {{ category.name }}
-              </option>
-            </select>
-
-              <select
-            v-model="selectedSubtype"
-            aria-label="Podkategorija prostora"
+          <select
+            v-model="selectedCategory"
+            aria-label="Vrsta prostora"
+            @change="selectedSubtype = ''"
           >
             <option value="">
-              Sve podkategorije
+              Sve vrste prostora
             </option>
 
             <option
-              v-for="subcategory in availableSubcategories"
-              :key="subcategory.id"
-              :value="subcategory.id"
+              v-for="spaceType in availableSpaceTypes"
+              :key="spaceType"
+              :value="spaceType"
             >
-              {{ subcategory.name }}
+              {{ formatSpaceType(spaceType) }}
             </option>
-      </select>
+          </select>
+
+          <select
+            v-model="selectedSubtype"
+            aria-label="Podvrsta prostora"
+          >
+            <option value="">
+              Sve podvrste
+            </option>
+
+            <option
+              v-for="subtype in availableSpaceSubtypes"
+              :key="subtype"
+              :value="subtype"
+            >
+              {{ formatSpaceSubtype(subtype) }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -462,17 +461,19 @@ function closeSpaceDetails() {
                 <div class="space-type-cell">
                   <span class="category-text">
                     {{
-                      space.subcategory?.category?.name ||
-                      'Nije definirano'
+                      formatSpaceType(
+                        space.space_type,
+                      )
                     }}
                   </span>
 
-                    <span class="subcategory-text">
-                      {{
-                        space.subcategory?.name ||
-                        'Nije definirano'
-                      }}
-                    </span>
+                  <span class="subcategory-text">
+                    {{
+                      formatSpaceSubtype(
+                        space.space_subtype,
+                      )
+                    }}
+                  </span>
                 </div>
               </td>
 

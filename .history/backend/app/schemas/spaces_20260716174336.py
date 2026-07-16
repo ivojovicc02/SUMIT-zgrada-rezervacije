@@ -1,4 +1,4 @@
-from typing import  Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import (
     BaseModel,
@@ -146,19 +146,6 @@ class SpaceServiceOut(
 # PROSTORI
 # ==========================================
 
-class WorkingDay(BaseModel):
-    is_closed: bool = False
-
-    opens_at: Optional[str] = Field(
-        default=None,
-        pattern=r"^\d{2}:\d{2}$",
-    )
-
-    closes_at: Optional[str] = Field(
-        default=None,
-        pattern=r"^\d{2}:\d{2}$",
-    )
-    
 class SpaceCreate(BaseModel):
     name: str = Field(
         min_length=1,
@@ -192,12 +179,6 @@ class SpaceCreate(BaseModel):
         default=None,
         max_length=50,
     )
-    working_hours: Dict[
-            str,
-            WorkingDay,
-        ] = Field(
-            default_factory=dict,
-        )
 
     images: List[
         SpaceImageCreate
@@ -255,10 +236,3 @@ class SpaceOut(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
-    
-    working_hours: Dict[
-            str,
-            WorkingDay,
-        ] = Field(
-            default_factory=dict,
-        )

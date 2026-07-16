@@ -948,10 +948,6 @@ def create_space(
             detail="Podkategorija nije pronađena.",
         )
 
-    working_hours = prepare_working_hours(
-        data.working_hours
-    )
-
     space = Space(
         name=data.name.strip(),
         description=data.description.strip(),
@@ -968,7 +964,6 @@ def create_space(
             )
             else None
         ),
-        working_hours=working_hours,
     )
 
     try:
@@ -1135,6 +1130,7 @@ def get_space(
 
     return space
 
+
 @router.put(
     "/spaces/{space_id}",
     response_model=SpaceOut,
@@ -1188,10 +1184,6 @@ def update_space(
             detail="Prostor s tim nazivom već postoji.",
         )
 
-    working_hours = prepare_working_hours(
-        data.working_hours
-    )
-
     try:
         space.name = data.name.strip()
         space.description = data.description.strip()
@@ -1210,8 +1202,6 @@ def update_space(
             )
             else None
         )
-
-        space.working_hours = working_hours
 
         db.query(SpaceEquipment).filter(
             SpaceEquipment.space_id == space_id
@@ -1252,6 +1242,7 @@ def update_space(
     except Exception:
         db.rollback()
         raise
+
 
 @router.delete("/spaces/{space_id}")
 def delete_space(

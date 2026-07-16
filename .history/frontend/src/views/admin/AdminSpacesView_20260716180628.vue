@@ -59,10 +59,12 @@ const filteredSpaces = computed(() => {
 
   return spaces.value.filter((space) => {
     const searchableValues = [
-         space.name,
-         space.description,
-         space.subcategory?.name,
-         space.subcategory?.category?.name,
+      space.name,
+      space.name_en,
+      space.description,
+      space.description_en,
+      space.space_type,
+      space.space_subtype,
     ]
 
     const matchesSearch =
@@ -76,13 +78,11 @@ const filteredSpaces = computed(() => {
 
     const matchesCategory =
       !selectedCategory.value ||
-      space.subcategory?.category?.id ===
-        Number(selectedCategory.value)
+      space.space_type === selectedCategory.value
 
     const matchesSubtype =
       !selectedSubtype.value ||
-      space.subcategory?.id ===
-        Number(selectedSubtype.value)
+      space.space_subtype === selectedSubtype.value
 
     return (
       matchesSearch &&
@@ -98,35 +98,29 @@ const totalCapacity = computed(() => {
   }, 0)
 })
 
-const availableCategories = computed(() => {
-  const categories = spaces.value
-    .map((space) => space.subcategory?.category)
+const availableSpaceTypes = computed(() => {
+  const types = spaces.value
+    .map((space) => space.space_type)
     .filter(Boolean)
 
-  return categories.filter(
-    (category, index, array) =>
-      array.findIndex(
-        (item) => item.id === category.id,
-      ) === index,
-  )
+  return [...new Set(types)].sort()
 })
-const availableSubcategories = computed(() => {
+
+const availableSpaceSubtypes = computed(() => {
   return spaces.value
-    .map((space) => space.subcategory)
-    .filter(Boolean)
-    .filter((subcategory) => {
+    .filter((space) => {
       return (
         !selectedCategory.value ||
-        subcategory.category?.id ===
-          Number(selectedCategory.value)
+        space.space_type === selectedCategory.value
       )
     })
+    .map((space) => space.space_subtype)
+    .filter(Boolean)
     .filter(
-      (subcategory, index, array) =>
-        array.findIndex(
-          (item) => item.id === subcategory.id,
-        ) === index,
+      (subtype, index, array) =>
+        array.indexOf(subtype) === index,
     )
+    .sort()
 })
 
 const averagePrice = computed(() => {
@@ -332,40 +326,40 @@ function closeSpaceDetails() {
         </div>
 
         <div class="filters">
-           <select
-              v-model="selectedCategory"
-              aria-label="Kategorija prostora"
-              @change="selectedSubtype = ''"
-            >
-              <option value="">
-                Sve kategorije
-              </option>
-
-              <option
-                v-for="category in availableCategories"
-                :key="category.id"
-                :value="category.id"
-              >
-                {{ category.name }}
-              </option>
-            </select>
-
-              <select
-            v-model="selectedSubtype"
-            aria-label="Podkategorija prostora"
+          <select
+            v-model="selectedCategory"
+            aria-label="Vrsta prostora"
+            @change="selectedSubtype = ''"
           >
             <option value="">
-              Sve podkategorije
+              Sve vrste prostora
             </option>
 
             <option
-              v-for="subcategory in availableSubcategories"
-              :key="subcategory.id"
-              :value="subcategory.id"
+              v-for="spaceType in availableSpaceTypes"
+              :key="spaceType"
+              :value="spaceType"
             >
-              {{ subcategory.name }}
+              {{ formatSpaceType(spaceType) }}
             </option>
-      </select>
+          </select>
+
+          <select
+            v-model="selectedSubtype"
+            aria-label="Podvrsta prostora"
+          >
+            <option value="">
+              Sve podvrste
+            </option>
+
+            <option
+              v-for="subtype in availableSpaceSubtypes"
+              :key="subtype"
+              :value="subtype"
+            >
+              {{ formatSpaceSubtype(subtype) }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -462,17 +456,19 @@ function closeSpaceDetails() {
                 <div class="space-type-cell">
                   <span class="category-text">
                     {{
-                      space.subcategory?.category?.name ||
-                      'Nije definirano'
+                      formatSpaceType(
+                        space.space_type,
+                      )
                     }}
                   </span>
 
-                    <span class="subcategory-text">
-                      {{
-                        space.subcategory?.name ||
-                        'Nije definirano'
-                      }}
-                    </span>
+                  <span class="subcategory-text">
+                    {{
+                      formatSpaceSubtype(
+                        space.space_subtype,
+                      )
+                    }}
+                  </span>
                 </div>
               </td>
 

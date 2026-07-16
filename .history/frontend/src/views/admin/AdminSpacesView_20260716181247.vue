@@ -462,17 +462,19 @@ function closeSpaceDetails() {
                 <div class="space-type-cell">
                   <span class="category-text">
                     {{
-                      space.subcategory?.category?.name ||
-                      'Nije definirano'
+                      formatSpaceType(
+                        space.space_type,
+                      )
                     }}
                   </span>
 
-                    <span class="subcategory-text">
-                      {{
-                        space.subcategory?.name ||
-                        'Nije definirano'
-                      }}
-                    </span>
+                  <span class="subcategory-text">
+                    {{
+                      formatSpaceSubtype(
+                        space.space_subtype,
+                      )
+                    }}
+                  </span>
                 </div>
               </td>
 

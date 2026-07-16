@@ -59,108 +59,12 @@ function getInitialForm() {
     is_modular: false,
     combination_group: null,
 
-    working_hours: {
-      monday: {
-        is_closed: false,
-        opens_at: '08:00',
-        closes_at: '20:00',
-      },
-
-      tuesday: {
-        is_closed: false,
-        opens_at: '08:00',
-        closes_at: '20:00',
-      },
-
-      wednesday: {
-        is_closed: false,
-        opens_at: '08:00',
-        closes_at: '20:00',
-      },
-
-      thursday: {
-        is_closed: false,
-        opens_at: '08:00',
-        closes_at: '20:00',
-      },
-
-      friday: {
-        is_closed: false,
-        opens_at: '08:00',
-        closes_at: '20:00',
-      },
-
-      saturday: {
-        is_closed: false,
-        opens_at: '09:00',
-        closes_at: '14:00',
-      },
-
-      sunday: {
-        is_closed: true,
-        opens_at: null,
-        closes_at: null,
-      },
-    },
-
     equipment: [],
     services: [],
   }
 }
+
 const form = ref(getInitialForm())
-
-function handleClosedDayChange(dayKey) {
-  const day =
-    form.value.working_hours[dayKey]
-
-  if (day.is_closed) {
-    day.opens_at = null
-    day.closes_at = null
-  } else {
-    day.opens_at = '08:00'
-    day.closes_at = '20:00'
-  }
-}
-
-function validateWorkingHours() {
-  for (const day of workingDays) {
-    const schedule =
-      form.value.working_hours[day.key]
-
-    if (!schedule) {
-      errorMessage.value =
-        `Nedostaje radno vrijeme za dan: ${day.label}.`
-
-      return false
-    }
-
-    if (schedule.is_closed) {
-      continue
-    }
-
-    if (
-      !schedule.opens_at ||
-      !schedule.closes_at
-    ) {
-      errorMessage.value =
-        `Unesite vrijeme otvaranja i zatvaranja za ${day.label}.`
-
-      return false
-    }
-
-    if (
-      schedule.opens_at >=
-      schedule.closes_at
-    ) {
-      errorMessage.value =
-        `Vrijeme otvaranja mora biti prije zatvaranja za ${day.label}.`
-
-      return false
-    }
-  }
-
-  return true
-}
 
 async function fetchCategories() {
   isLoadingCategories.value = true
@@ -417,10 +321,6 @@ async function submitForm() {
     return
   }
 
-  if (!validateWorkingHours()) {
-  return
-  }
-
   isSaving.value = true
 
   try {
@@ -448,28 +348,6 @@ async function submitForm() {
         form.value.combination_group
           ? form.value.combination_group.trim()
           : null,
-
-      working_hours: Object.fromEntries(
-          workingDays.map((day) => {
-            const schedule =
-              form.value.working_hours[day.key]
-
-            return [
-              day.key,
-              {
-                is_closed: schedule.is_closed,
-
-                opens_at: schedule.is_closed
-                  ? null
-                  : schedule.opens_at,
-
-                closes_at: schedule.is_closed
-                  ? null
-                  : schedule.closes_at,
-              },
-            ]
-          }),
-        ),
 
       images: [],
 
@@ -823,87 +701,6 @@ const workingDays = [
                 />
               </label>
             </section>
-
-            <section class="form-section">
-        <h3>Radno vrijeme</h3>
-
-        <p class="form-help-text">
-          Odredite kada se prostor može
-          rezervirati za svaki dan u tjednu.
-        </p>
-
-        <div class="working-hours-list">
-          <div
-            v-for="day in workingDays"
-            :key="day.key"
-            class="working-hours-row"
-          >
-            <strong class="working-day-name">
-              {{ day.label }}
-            </strong>
-
-            <label class="closed-day-field">
-              <input
-                v-model="
-                  form.working_hours[day.key]
-                    .is_closed
-                "
-                type="checkbox"
-                @change="
-                  handleClosedDayChange(day.key)
-                "
-              />
-
-              <span>Zatvoreno</span>
-            </label>
-
-            <div
-              v-if="
-                !form.working_hours[day.key]
-                  .is_closed
-              "
-              class="working-time-inputs"
-            >
-              <label class="time-field">
-                <span>Od</span>
-
-                <input
-                  v-model="
-                    form.working_hours[day.key]
-                      .opens_at
-                  "
-                  type="time"
-                  required
-                />
-              </label>
-
-              <span class="time-separator">
-                –
-              </span>
-
-              <label class="time-field">
-                <span>Do</span>
-
-                <input
-                  v-model="
-                    form.working_hours[day.key]
-                      .closes_at
-                  "
-                  type="time"
-                  required
-                />
-              </label>
-            </div>
-
-            <span
-              v-else
-              class="closed-day-label"
-            >
-              Prostor ne radi
-            </span>
-          </div>
-        </div>
-      </section>
 
             <section class="form-section">
               <h3>Oprema</h3>

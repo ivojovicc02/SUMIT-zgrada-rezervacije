@@ -6,76 +6,10 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    JSON,
-    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-
-
-class SpaceCategory(Base):
-    __tablename__ = "space_categories"
-
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True,
-    )
-
-    name = Column(
-        String(100),
-        nullable=False,
-        unique=True,
-    )
-
-    subcategories = relationship(
-        "SpaceSubcategory",
-        back_populates="category",
-    )
-
-
-class SpaceSubcategory(Base):
-    __tablename__ = "space_subcategories"
-
-    __table_args__ = (
-        UniqueConstraint(
-            "category_id",
-            "name",
-            name="uq_space_subcategory_category_name",
-        ),
-    )
-
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True,
-    )
-
-    name = Column(
-        String(100),
-        nullable=False,
-    )
-
-    category_id = Column(
-        Integer,
-        ForeignKey(
-            "space_categories.id",
-            ondelete="RESTRICT",
-        ),
-        nullable=False,
-        index=True,
-    )
-
-    category = relationship(
-        "SpaceCategory",
-        back_populates="subcategories",
-    )
-
-    spaces = relationship(
-        "Space",
-        back_populates="subcategory",
-    )
 
 
 class Space(Base):
@@ -97,14 +31,15 @@ class Space(Base):
         nullable=False,
     )
 
-    subcategory_id = Column(
-        Integer,
-        ForeignKey(
-            "space_subcategories.id",
-            ondelete="RESTRICT",
-        ),
+    # Kategorizacija
+    space_type = Column(
+        String(50),
         nullable=False,
-        index=True,
+    )
+
+    space_subtype = Column(
+        String(50),
+        nullable=False,
     )
 
     capacity = Column(
@@ -112,6 +47,7 @@ class Space(Base):
         nullable=False,
     )
 
+    # Naplata
     price = Column(
         Float,
         nullable=False,
@@ -123,6 +59,7 @@ class Space(Base):
         default="hour",
     )
 
+    # Modularne/povezive konferencijske dvorane
     is_modular = Column(
         Boolean,
         nullable=False,
@@ -132,17 +69,6 @@ class Space(Base):
     combination_group = Column(
         String(50),
         nullable=True,
-    )
-    
-    working_hours = Column(
-        JSON,
-        nullable=False,
-        default=dict,
-   ) 
-
-    subcategory = relationship(
-        "SpaceSubcategory",
-        back_populates="spaces",
     )
 
     images = relationship(
@@ -180,12 +106,8 @@ class SpaceImage(Base):
 
     space_id = Column(
         Integer,
-        ForeignKey(
-            "spaces.id",
-            ondelete="CASCADE",
-        ),
+        ForeignKey("spaces.id"),
         nullable=False,
-        index=True,
     )
 
     url = Column(
@@ -216,12 +138,8 @@ class SpaceEquipment(Base):
 
     space_id = Column(
         Integer,
-        ForeignKey(
-            "spaces.id",
-            ondelete="CASCADE",
-        ),
+        ForeignKey("spaces.id"),
         nullable=False,
-        index=True,
     )
 
     name = Column(

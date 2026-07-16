@@ -170,60 +170,6 @@ function handleImageError(event) {
             </div>
           </div>
 
-                  <section class="details-section">
-          <h3>Radno vrijeme</h3>
-
-          <div
-            v-if="
-              space.working_hours &&
-              Object.keys(space.working_hours).length
-            "
-            class="working-hours-details"
-          >
-            <div
-              v-for="day in workingDays"
-              :key="day.key"
-              class="working-hours-detail-row"
-            >
-              <span class="working-hours-day">
-                {{ day.label }}
-              </span>
-
-              <template v-if="getWorkingDay(space, day.key)">
-                <strong
-                  v-if="
-                    getWorkingDay(space, day.key).is_closed
-                  "
-                  class="working-hours-closed"
-                >
-                  Zatvoreno
-                </strong>
-
-                <strong v-else>
-                  {{
-                    getWorkingDay(space, day.key).opens_at
-                  }}
-                  –
-                  {{
-                    getWorkingDay(space, day.key).closes_at
-                  }}
-                </strong>
-              </template>
-
-              <span
-                v-else
-                class="working-hours-undefined"
-              >
-                Nije definirano
-              </span>
-            </div>
-          </div>
-
-          <p v-else>
-            Radno vrijeme nije definirano.
-          </p>
-        </section>
-
           <section class="details-section">
             <h3>Oprema</h3>
 

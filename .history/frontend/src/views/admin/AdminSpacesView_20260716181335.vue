@@ -467,12 +467,13 @@ function closeSpaceDetails() {
                     }}
                   </span>
 
-                    <span class="subcategory-text">
-                      {{
-                        space.subcategory?.name ||
-                        'Nije definirano'
-                      }}
-                    </span>
+                  <span class="subcategory-text">
+                    {{
+                      formatSpaceSubtype(
+                        space.space_subtype,
+                      )
+                    }}
+                  </span>
                 </div>
               </td>
 

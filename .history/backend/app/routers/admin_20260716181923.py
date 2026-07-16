@@ -72,61 +72,6 @@ MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
 UPLOAD_ROOT = Path("/app/uploads/spaces")
 UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
-ALLOWED_WORKING_DAYS = {
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-    "sunday",
-}
-
-
-def prepare_working_hours(working_hours):
-    normalized_hours = {}
-
-    for day, schedule in working_hours.items():
-        if day not in ALLOWED_WORKING_DAYS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Neispravan dan u radnom vremenu: {day}.",
-            )
-
-        if schedule.is_closed:
-            normalized_hours[day] = {
-                "is_closed": True,
-                "opens_at": None,
-                "closes_at": None,
-            }
-            continue
-
-        if not schedule.opens_at or not schedule.closes_at:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    f"Vrijeme otvaranja i zatvaranja "
-                    f"obavezno je za dan '{day}'."
-                ),
-            )
-
-        if schedule.opens_at >= schedule.closes_at:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    f"Vrijeme otvaranja mora biti prije "
-                    f"zatvaranja za dan '{day}'."
-                ),
-            )
-
-        normalized_hours[day] = {
-            "is_closed": False,
-            "opens_at": schedule.opens_at,
-            "closes_at": schedule.closes_at,
-        }
-
-    return normalized_hours
-
 
 # ─── KATEGORIJE PROSTORA ──────────────────────────────────────────────────────
 
@@ -790,7 +735,6 @@ def get_me(
 def create_admin(
     admin_data: AdminCreate,
     db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
 ):
     filters = [User.username == admin_data.username]
 
@@ -948,10 +892,6 @@ def create_space(
             detail="Podkategorija nije pronađena.",
         )
 
-    working_hours = prepare_working_hours(
-        data.working_hours
-    )
-
     space = Space(
         name=data.name.strip(),
         description=data.description.strip(),
@@ -968,7 +908,6 @@ def create_space(
             )
             else None
         ),
-        working_hours=working_hours,
     )
 
     try:
@@ -1135,6 +1074,7 @@ def get_space(
 
     return space
 
+
 @router.put(
     "/spaces/{space_id}",
     response_model=SpaceOut,
@@ -1188,10 +1128,6 @@ def update_space(
             detail="Prostor s tim nazivom već postoji.",
         )
 
-    working_hours = prepare_working_hours(
-        data.working_hours
-    )
-
     try:
         space.name = data.name.strip()
         space.description = data.description.strip()
@@ -1210,8 +1146,6 @@ def update_space(
             )
             else None
         )
-
-        space.working_hours = working_hours
 
         db.query(SpaceEquipment).filter(
             SpaceEquipment.space_id == space_id
@@ -1252,6 +1186,7 @@ def update_space(
     except Exception:
         db.rollback()
         raise
+
 
 @router.delete("/spaces/{space_id}")
 def delete_space(

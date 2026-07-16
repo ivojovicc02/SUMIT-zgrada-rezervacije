@@ -1,4 +1,4 @@
-from typing import  Dict, List, Optional
+from typing import List, Optional
 
 from pydantic import (
     BaseModel,
@@ -6,10 +6,6 @@ from pydantic import (
     Field,
 )
 
-
-# ==========================================
-# KATEGORIJE
-# ==========================================
 
 class SpaceCategoryCreate(BaseModel):
     name: str = Field(
@@ -34,50 +30,6 @@ class SpaceCategoryOut(BaseModel):
     )
 
 
-# ==========================================
-# PODKATEGORIJE
-# ==========================================
-
-class SpaceSubcategoryCreate(BaseModel):
-    name: str = Field(
-        min_length=1,
-        max_length=100,
-    )
-
-    category_id: int = Field(
-        gt=0,
-    )
-
-
-class SpaceSubcategoryUpdate(BaseModel):
-    name: Optional[str] = Field(
-        default=None,
-        min_length=1,
-        max_length=100,
-    )
-
-    category_id: Optional[int] = Field(
-        default=None,
-        gt=0,
-    )
-
-
-class SpaceSubcategoryOut(BaseModel):
-    id: int
-    name: str
-    category_id: int
-
-    category: SpaceCategoryOut
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-
-# ==========================================
-# SLIKE
-# ==========================================
-
 class SpaceImageCreate(BaseModel):
     url: str
     is_primary: bool = False
@@ -90,10 +42,6 @@ class SpaceImageOut(SpaceImageCreate):
         from_attributes=True,
     )
 
-
-# ==========================================
-# OPREMA
-# ==========================================
 
 class SpaceEquipmentCreate(BaseModel):
     name: str = Field(
@@ -111,10 +59,6 @@ class SpaceEquipmentOut(
         from_attributes=True,
     )
 
-
-# ==========================================
-# DODATNE USLUGE
-# ==========================================
 
 class SpaceServiceCreate(BaseModel):
     name: str = Field(
@@ -142,23 +86,6 @@ class SpaceServiceOut(
     )
 
 
-# ==========================================
-# PROSTORI
-# ==========================================
-
-class WorkingDay(BaseModel):
-    is_closed: bool = False
-
-    opens_at: Optional[str] = Field(
-        default=None,
-        pattern=r"^\d{2}:\d{2}$",
-    )
-
-    closes_at: Optional[str] = Field(
-        default=None,
-        pattern=r"^\d{2}:\d{2}$",
-    )
-    
 class SpaceCreate(BaseModel):
     name: str = Field(
         min_length=1,
@@ -169,8 +96,13 @@ class SpaceCreate(BaseModel):
         min_length=1,
     )
 
-    subcategory_id: int = Field(
+    category_id: int = Field(
         gt=0,
+    )
+
+    space_subtype: str = Field(
+        min_length=1,
+        max_length=100,
     )
 
     capacity: int = Field(
@@ -192,16 +124,8 @@ class SpaceCreate(BaseModel):
         default=None,
         max_length=50,
     )
-    working_hours: Dict[
-            str,
-            WorkingDay,
-        ] = Field(
-            default_factory=dict,
-        )
 
-    images: List[
-        SpaceImageCreate
-    ] = Field(
+    images: List[SpaceImageCreate] = Field(
         default_factory=list,
     )
 
@@ -224,8 +148,10 @@ class SpaceOut(BaseModel):
     name: str
     description: str
 
-    subcategory_id: int
-    subcategory: SpaceSubcategoryOut
+    category_id: int
+    category: SpaceCategoryOut
+
+    space_subtype: str
 
     capacity: int
     price: float
@@ -234,9 +160,7 @@ class SpaceOut(BaseModel):
     is_modular: bool
     combination_group: Optional[str]
 
-    images: List[
-        SpaceImageOut
-    ] = Field(
+    images: List[SpaceImageOut] = Field(
         default_factory=list,
     )
 
@@ -255,10 +179,3 @@ class SpaceOut(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,
     )
-    
-    working_hours: Dict[
-            str,
-            WorkingDay,
-        ] = Field(
-            default_factory=dict,
-        )

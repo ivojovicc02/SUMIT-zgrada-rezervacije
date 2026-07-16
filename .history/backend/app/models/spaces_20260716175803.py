@@ -6,7 +6,6 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
-    JSON,
     UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
@@ -133,12 +132,6 @@ class Space(Base):
         String(50),
         nullable=True,
     )
-    
-    working_hours = Column(
-        JSON,
-        nullable=False,
-        default=dict,
-   ) 
 
     subcategory = relationship(
         "SpaceSubcategory",

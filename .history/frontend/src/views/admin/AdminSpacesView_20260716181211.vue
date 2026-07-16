@@ -350,22 +350,22 @@ function closeSpaceDetails() {
               </option>
             </select>
 
-              <select
+          <select
             v-model="selectedSubtype"
-            aria-label="Podkategorija prostora"
+            aria-label="Podvrsta prostora"
           >
             <option value="">
-              Sve podkategorije
+              Sve podvrste
             </option>
 
             <option
-              v-for="subcategory in availableSubcategories"
-              :key="subcategory.id"
-              :value="subcategory.id"
+              v-for="subtype in availableSpaceSubtypes"
+              :key="subtype"
+              :value="subtype"
             >
-              {{ subcategory.name }}
+              {{ formatSpaceSubtype(subtype) }}
             </option>
-      </select>
+          </select>
         </div>
       </div>
 
@@ -462,17 +462,19 @@ function closeSpaceDetails() {
                 <div class="space-type-cell">
                   <span class="category-text">
                     {{
-                      space.subcategory?.category?.name ||
-                      'Nije definirano'
+                      formatSpaceType(
+                        space.space_type,
+                      )
                     }}
                   </span>
 
-                    <span class="subcategory-text">
-                      {{
-                        space.subcategory?.name ||
-                        'Nije definirano'
-                      }}
-                    </span>
+                  <span class="subcategory-text">
+                    {{
+                      formatSpaceSubtype(
+                        space.space_subtype,
+                      )
+                    }}
+                  </span>
                 </div>
               </td>
 
