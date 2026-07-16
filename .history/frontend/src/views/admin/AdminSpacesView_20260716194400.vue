@@ -24,22 +24,6 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 const deletingSpaceId = ref(null)
 const isCreateModalOpen = ref(false)
-const isCategoriesModalOpen = ref(false)
-
-function openCategoriesModal() {
-  isCategoriesModalOpen.value = true
-}
-
-function closeCategoriesModal() {
-  isCategoriesModalOpen.value = false
-}
-
-async function handleCategoriesChanged() {
-  await fetchSpaces()
-
-  selectedCategory.value = ''
-  selectedSubtype.value = ''
-}
 
 function handleImageError(event) {
   if (event.target.src !== fallbackSpaceImage) {
@@ -269,25 +253,14 @@ function closeSpaceDetails() {
         </p>
       </div>
 
-      <div class="page-header-actions">
-          <button
-            class="primary-button"
-            type="button"
-            @click="openCategoriesModal"
-          >
-            <span class="button-icon">⚙</span>
-            Kategorije
-          </button>
-
-          <button
-            class="primary-button"
-            type="button"
-            @click="openCreateSpace"
-          >
-            <span class="button-icon">+</span>
-            Dodaj prostor
-          </button>
-        </div>
+      <button
+        class="primary-button"
+        type="button"
+        @click="openCreateSpace"
+      >
+        <span class="button-icon">+</span>
+        Dodaj prostor
+      </button>
     </header>
 
     <div class="summary-grid">
@@ -692,13 +665,4 @@ function closeSpaceDetails() {
   @close="closeCreateSpace"
   @created="handleSpaceCreated"
 />
-<SpaceCategoriesModal
-  :is-open="isCategoriesModalOpen"
-  @close="closeCategoriesModal"
-  @changed="handleCategoriesChanged"
-/>
 </template>
-
-<style
-  src="../../styles/admin/admin-spaces.css"
-></style>

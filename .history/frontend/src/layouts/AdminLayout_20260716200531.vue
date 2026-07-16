@@ -178,5 +178,5 @@ async function handleLogout() {
 </template>
 ```
 <style
-  src="../styles/admin/admin-layout.css"
+  src="../../assets/styles/admin/admin-layout.css"
 ></style>

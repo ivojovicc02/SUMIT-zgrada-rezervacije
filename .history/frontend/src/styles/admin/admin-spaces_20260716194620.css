@@ -1400,8 +1400,3 @@
     width: 100%;
   }
 }
-.page-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}

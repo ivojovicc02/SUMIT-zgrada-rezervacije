@@ -698,7 +698,3 @@ function closeSpaceDetails() {
   @changed="handleCategoriesChanged"
 />
 </template>
-
-<style
-  src="../../styles/admin/admin-spaces.css"
-></style>

@@ -700,5 +700,5 @@ function closeSpaceDetails() {
 </template>
 
 <style
-  src="../../styles/admin/admin-spaces.css"
+  src="../../styles//admin/AdminSpacesView.css"
 ></style>

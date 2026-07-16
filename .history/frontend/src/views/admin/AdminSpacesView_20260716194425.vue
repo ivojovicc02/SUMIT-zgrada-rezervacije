@@ -269,25 +269,14 @@ function closeSpaceDetails() {
         </p>
       </div>
 
-      <div class="page-header-actions">
-          <button
-            class="primary-button"
-            type="button"
-            @click="openCategoriesModal"
-          >
-            <span class="button-icon">⚙</span>
-            Kategorije
-          </button>
-
-          <button
-            class="primary-button"
-            type="button"
-            @click="openCreateSpace"
-          >
-            <span class="button-icon">+</span>
-            Dodaj prostor
-          </button>
-        </div>
+      <button
+        class="primary-button"
+        type="button"
+        @click="openCreateSpace"
+      >
+        <span class="button-icon">+</span>
+        Dodaj prostor
+      </button>
     </header>
 
     <div class="summary-grid">
@@ -692,13 +681,4 @@ function closeSpaceDetails() {
   @close="closeCreateSpace"
   @created="handleSpaceCreated"
 />
-<SpaceCategoriesModal
-  :is-open="isCategoriesModalOpen"
-  @close="closeCategoriesModal"
-  @changed="handleCategoriesChanged"
-/>
 </template>
-
-<style
-  src="../../styles/admin/admin-spaces.css"
-></style>
