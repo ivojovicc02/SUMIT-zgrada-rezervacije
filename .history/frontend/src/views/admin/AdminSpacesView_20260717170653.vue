@@ -717,6 +717,7 @@ function closeSpaceDetails() {
   @close="closeEditSpace"
   @updated="handleSpaceUpdated"
 />
+
 </template>
 
 <style

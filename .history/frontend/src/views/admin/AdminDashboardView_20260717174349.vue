@@ -201,6 +201,9 @@ function goToReports() {
   <section class="dashboard-page">
     <header class="dashboard-header">
       <div>
+        <p class="dashboard-eyebrow">
+          Administracija
+        </p>
 
         <h1>Pregled sustava</h1>
 

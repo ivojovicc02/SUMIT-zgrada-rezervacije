@@ -207,14 +207,9 @@ function editSpace(space) {
   isEditModalOpen.value = true
 }
 
-function closeEditSpace() {
-  isEditModalOpen.value = false
-  spaceToEdit.value = null
-}
-
-async function handleSpaceUpdated() {
-  await fetchSpaces()
-  closeEditSpace()
+function editSpace(space) {
+  spaceToEdit.value = space
+  isEditModalOpen.value = true
 }
 
 function openCalendar(space) {
@@ -710,12 +705,6 @@ function closeSpaceDetails() {
   :is-open="isCategoriesModalOpen"
   @close="closeCategoriesModal"
   @changed="handleCategoriesChanged"
-/>
-<SpaceEditModal
-  :is-open="isEditModalOpen"
-  :space="spaceToEdit"
-  @close="closeEditSpace"
-  @updated="handleSpaceUpdated"
 />
 </template>
 

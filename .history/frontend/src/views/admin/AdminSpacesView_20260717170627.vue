@@ -711,12 +711,6 @@ function closeSpaceDetails() {
   @close="closeCategoriesModal"
   @changed="handleCategoriesChanged"
 />
-<SpaceEditModal
-  :is-open="isEditModalOpen"
-  :space="spaceToEdit"
-  @close="closeEditSpace"
-  @updated="handleSpaceUpdated"
-/>
 </template>
 
 <style

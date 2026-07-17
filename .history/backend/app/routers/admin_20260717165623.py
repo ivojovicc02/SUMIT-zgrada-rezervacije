@@ -993,45 +993,6 @@ def delete_space_image(
             else None
         ),
     }
-    
-@router.get(
-    "/spaces/{space_id}/images",
-)
-def get_space_images(
-    space_id: int,
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    space = (
-        db.query(Space)
-        .filter(Space.id == space_id)
-        .first()
-    )
-
-    if not space:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Prostor nije pronađen.",
-        )
-
-    images = (
-        db.query(SpaceImage)
-        .filter(SpaceImage.space_id == space_id)
-        .order_by(
-            SpaceImage.is_primary.desc(),
-            SpaceImage.id.asc(),
-        )
-        .all()
-    )
-
-    return [
-        {
-            "id": image.id,
-            "url": image.url,
-            "is_primary": image.is_primary,
-        }
-        for image in images
-    ]
 
 @router.get("/me")
 def get_me(

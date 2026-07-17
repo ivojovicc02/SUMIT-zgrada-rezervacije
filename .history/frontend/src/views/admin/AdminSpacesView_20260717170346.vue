@@ -26,8 +26,6 @@ const errorMessage = ref('')
 const deletingSpaceId = ref(null)
 const isCreateModalOpen = ref(false)
 const isCategoriesModalOpen = ref(false)
-const isEditModalOpen = ref(false)
-const spaceToEdit = ref(null)
 
 function openCategoriesModal() {
   isCategoriesModalOpen.value = true
@@ -203,18 +201,7 @@ async function handleSpaceCreated() {
 }
 
 function editSpace(space) {
-  spaceToEdit.value = space
-  isEditModalOpen.value = true
-}
-
-function closeEditSpace() {
-  isEditModalOpen.value = false
-  spaceToEdit.value = null
-}
-
-async function handleSpaceUpdated() {
-  await fetchSpaces()
-  closeEditSpace()
+  console.log('Uredi prostor:', space)
 }
 
 function openCalendar(space) {
@@ -710,12 +697,6 @@ function closeSpaceDetails() {
   :is-open="isCategoriesModalOpen"
   @close="closeCategoriesModal"
   @changed="handleCategoriesChanged"
-/>
-<SpaceEditModal
-  :is-open="isEditModalOpen"
-  :space="spaceToEdit"
-  @close="closeEditSpace"
-  @updated="handleSpaceUpdated"
 />
 </template>
 
