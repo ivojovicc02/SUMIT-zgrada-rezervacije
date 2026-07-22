@@ -87,7 +87,7 @@ async def create_reservation(
         raise HTTPException(status_code=404, detail="Prostor nije pronađen")
 
     hours = (data.end_time - data.start_time).seconds / 3600
-    space_price = hours * space.price
+    space_price = hours * space.price_per_hour
 
     # Izračunaj cijenu usluga
     services_data = []
