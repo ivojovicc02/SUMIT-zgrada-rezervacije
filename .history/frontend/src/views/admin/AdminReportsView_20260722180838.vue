@@ -5,7 +5,7 @@ import {
   ref,
   watch,
 } from 'vue'
-import { getReports } from '../../services/admin/reservationService'
+import { getReports } from '@/services/reservationService'
 
 const selectedPeriod = ref('year')
 const selectedSpace = ref('all')

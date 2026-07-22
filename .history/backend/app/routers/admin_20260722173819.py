@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import os
-from typing import List, Optional,Annotated,Literal
+from typing import List, Optional,Annotated
+import shutil
 from pathlib import Path
 from uuid import uuid4
 from fastapi import (
@@ -11,11 +12,6 @@ from fastapi import (
     HTTPException,
     Query,
     status,
-)
-from app.schemas.user import (
-    AdminCreate,
-    AdminOut,
-    AdminUpdate,
 )
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, or_
@@ -1046,122 +1042,6 @@ def get_me(
         "username": current_admin.username,
         "role": current_admin.role,
     }
-    
-@router.get(
-    "/admins",
-    response_model=List[AdminOut],
-)
-def get_admins(
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    return (
-        db.query(User)
-        .filter(User.role == "admin")
-        .order_by(User.username.asc())
-        .all()
-    )
-
-@router.put(
-    "/admins/{admin_id}",
-    response_model=AdminOut,
-)
-def update_admin(
-    admin_id: int,
-    data: AdminUpdate,
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    admin = (
-        db.query(User)
-        .filter(
-            User.id == admin_id,
-            User.role == "admin",
-        )
-        .first()
-    )
-
-    if not admin:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Administrator nije pronađen.",
-        )
-
-    if data.username is not None:
-        username = data.username.strip()
-
-        existing_username = (
-            db.query(User)
-            .filter(
-                func.lower(User.username)
-                == username.lower(),
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_username:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Korisničko ime već postoji.",
-            )
-
-        admin.username = username
-
-    if data.email is not None:
-        email = data.email.strip().lower()
-
-        existing_email = (
-            db.query(User)
-            .filter(
-                func.lower(User.email) == email,
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email adresa već postoji.",
-            )
-
-        admin.email = email
-
-    if data.password:
-        admin.hashed_password = get_password_hash(
-            data.password
-        )
-
-    if data.is_active is not None:
-        if (
-            admin.id == current_admin.id
-            and data.is_active is False
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Ne možete deaktivirati vlastiti račun."
-                ),
-            )
-
-        admin.is_active = data.is_active
-
-    try:
-        db.commit()
-        db.refresh(admin)
-
-        return admin
-
-    except IntegrityError:
-        db.rollback()
-
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Korisničko ime ili email već postoji."
-            ),
-        )
 
 @router.post(
     "/create-admin",
@@ -1170,8 +1050,7 @@ def update_admin(
 def create_admin(
     admin_data: AdminCreate,
     db: Session = Depends(get_db),
-    #Ovo odkomentiraj ako zelis zastiti rutu za kreiranje admina natrag..
-    #current_admin: User = Depends(get_current_admin),
+    current_admin: User = Depends(get_current_admin),
 ):
     filters = [User.username == admin_data.username]
 
@@ -2064,418 +1943,51 @@ def get_dashboard(
         "recentReservations": recent_reservations,
         "spaceOccupancy": space_occupancy,
     }
-
+    
 @router.get("/reports")
-def get_admin_reports(
-    period: Literal["week", "month", "quarter", "year"] = Query(
-        default="year"
-    ),
-    space_id: Optional[int] = Query(default=None),
+def get_reports(
+    from_date: datetime = Query(...),
+    to_date: datetime = Query(...),
     db: Session = Depends(get_db),
-    current_admin=Depends(get_current_admin),
+    current_admin: User = Depends(get_current_admin),
 ):
-    now = datetime.now()
-    start_date, end_date = get_report_date_range(period, now)
-
+    # Samo potvrđene rezervacije
     base_query = db.query(Reservation).filter(
-        Reservation.start_time >= start_date,
-        Reservation.start_time < end_date,
+        Reservation.status == ReservationStatus.confirmed,
+        Reservation.start_time >= from_date,
+        Reservation.end_time <= to_date,
     )
-
-    if space_id is not None:
-        base_query = base_query.filter(
-            Reservation.space_id == space_id
-        )
 
     reservations = base_query.all()
-
+    total_revenue = sum(r.total_price for r in reservations)
     total_reservations = len(reservations)
 
-    cancelled_reservations = sum(
-        1
-        for reservation in reservations
-        if get_status_value(reservation.status) == "cancelled"
-    )
-
-    revenue_reservations = [
-        reservation
-        for reservation in reservations
-        if get_status_value(reservation.status)
-        in {"confirmed", "completed"}
-    ]
-
-    total_revenue = sum(
-        float(reservation.total_price or 0)
-        for reservation in revenue_reservations
-    )
-
-    average_reservation_value = (
-        total_revenue / len(revenue_reservations)
-        if revenue_reservations
-        else 0
-    )
-
-    monthly_data = build_monthly_data(
-        reservations=reservations,
-        start_date=start_date,
-        end_date=end_date,
-    )
-
-    space_performance = build_space_performance(
-        db=db,
-        reservations=reservations,
-        selected_space_id=space_id,
-    )
-
-    reservation_statuses = build_reservation_statuses(
-        reservations
-    )
-
-    spaces_query = db.query(Space).order_by(Space.name.asc())
-
-    if space_id is not None:
-        spaces_query = spaces_query.filter(
-            Space.id == space_id
+    # Korištenost po prostoru
+    space_stats = []
+    spaces = db.query(Space).all()
+    for space in spaces:
+        space_reservations = [r for r in reservations if r.space_id == space.id]
+        space_hours = sum(
+            (r.end_time - r.start_time).seconds / 3600
+            for r in space_reservations
         )
-
-    spaces = spaces_query.all()
+        space_revenue = sum(r.total_price for r in space_reservations)
+        space_stats.append({
+            "space_id": space.id,
+            "space_name": space.name,
+            "total_reservations": len(space_reservations),
+            "total_hours": round(space_hours, 1),
+            "total_revenue": round(space_revenue, 2),
+        })
 
     return {
-        "filters": {
-            "period": period,
-            "spaceId": space_id,
-            "startDate": start_date.isoformat(),
-            "endDate": end_date.isoformat(),
+        "period": {
+            "from": from_date,
+            "to": to_date,
         },
-        "spaces": [
-            {
-                "id": space.id,
-                "name": space.name,
-            }
-            for space in spaces
-        ],
-        "statistics": {
-            "totalReservations": total_reservations,
-            "totalRevenue": round(total_revenue, 2),
-            "averageReservationValue": round(
-                average_reservation_value,
-                2,
-            ),
-            "cancelledReservations": cancelled_reservations,
+        "summary": {
+            "total_revenue": round(total_revenue, 2),
+            "total_reservations": total_reservations,
         },
-        "monthlyData": monthly_data,
-        "spacePerformance": space_performance,
-        "reservationStatuses": reservation_statuses,
+        "by_space": space_stats,
     }
-
-def get_report_date_range(
-    period: str,
-    now: datetime,
-) -> tuple[datetime, datetime]:
-    if period == "week":
-        start_date = now - timedelta(days=now.weekday())
-        start_date = start_date.replace(
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        end_date = start_date + timedelta(days=7)
-
-        return start_date, end_date
-
-    if period == "month":
-        start_date = now.replace(
-            day=1,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        if start_date.month == 12:
-            end_date = start_date.replace(
-                year=start_date.year + 1,
-                month=1,
-            )
-        else:
-            end_date = start_date.replace(
-                month=start_date.month + 1,
-            )
-
-        return start_date, end_date
-
-    if period == "quarter":
-        quarter_start_month = (
-            ((now.month - 1) // 3) * 3
-        ) + 1
-
-        start_date = now.replace(
-            month=quarter_start_month,
-            day=1,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        next_quarter_month = quarter_start_month + 3
-
-        if next_quarter_month > 12:
-            end_date = start_date.replace(
-                year=start_date.year + 1,
-                month=next_quarter_month - 12,
-            )
-        else:
-            end_date = start_date.replace(
-                month=next_quarter_month,
-            )
-
-        return start_date, end_date
-
-    start_date = now.replace(
-        month=1,
-        day=1,
-        hour=0,
-        minute=0,
-        second=0,
-        microsecond=0,
-    )
-
-    end_date = start_date.replace(
-        year=start_date.year + 1,
-    )
-
-    return start_date, end_date
-    
-def get_status_value(status) -> str:
-    if hasattr(status, "value"):
-        return status.value
-
-    return str(status)
-
-MONTH_NAMES = {
-    1: {
-        "short": "Sij",
-        "full": "Siječanj",
-    },
-    2: {
-        "short": "Velj",
-        "full": "Veljača",
-    },
-    3: {
-        "short": "Ožu",
-        "full": "Ožujak",
-    },
-    4: {
-        "short": "Tra",
-        "full": "Travanj",
-    },
-    5: {
-        "short": "Svi",
-        "full": "Svibanj",
-    },
-    6: {
-        "short": "Lip",
-        "full": "Lipanj",
-    },
-    7: {
-        "short": "Srp",
-        "full": "Srpanj",
-    },
-    8: {
-        "short": "Kol",
-        "full": "Kolovoz",
-    },
-    9: {
-        "short": "Ruj",
-        "full": "Rujan",
-    },
-    10: {
-        "short": "Lis",
-        "full": "Listopad",
-    },
-    11: {
-        "short": "Stu",
-        "full": "Studeni",
-    },
-    12: {
-        "short": "Pro",
-        "full": "Prosinac",
-    },
-}
-
-def build_monthly_data(
-    reservations: list[Reservation],
-    start_date: datetime,
-    end_date: datetime,
-) -> list[dict]:
-    monthly_values = {}
-
-    current_month = start_date.replace(day=1)
-
-    while current_month < end_date:
-        key = (
-            current_month.year,
-            current_month.month,
-        )
-
-        monthly_values[key] = {
-            "month": MONTH_NAMES[current_month.month][
-                "short"
-            ],
-            "fullMonth": (
-                f"{MONTH_NAMES[current_month.month]['full']} "
-                f"{current_month.year}"
-            ),
-            "reservations": 0,
-            "revenue": 0,
-        }
-
-        if current_month.month == 12:
-            current_month = current_month.replace(
-                year=current_month.year + 1,
-                month=1,
-            )
-        else:
-            current_month = current_month.replace(
-                month=current_month.month + 1,
-            )
-
-    for reservation in reservations:
-        key = (
-            reservation.start_time.year,
-            reservation.start_time.month,
-        )
-
-        if key not in monthly_values:
-            continue
-
-        monthly_values[key]["reservations"] += 1
-
-        if get_status_value(reservation.status) in {
-            "confirmed",
-            "completed",
-        }:
-            monthly_values[key]["revenue"] += float(
-                reservation.total_price or 0
-            )
-
-    result = list(monthly_values.values())
-
-    for item in result:
-        item["revenue"] = round(
-            item["revenue"],
-            2,
-        )
-
-    return result
-
-def build_space_performance(
-    db: Session,
-    reservations: list[Reservation],
-    selected_space_id: Optional[int] = None,
-) -> list[dict]:
-    spaces_query = db.query(Space)
-
-    if selected_space_id is not None:
-        spaces_query = spaces_query.filter(
-            Space.id == selected_space_id
-        )
-
-    spaces = spaces_query.order_by(
-        Space.name.asc()
-    ).all()
-
-    reservations_by_space = {}
-
-    for reservation in reservations:
-        reservations_by_space.setdefault(
-            reservation.space_id,
-            [],
-        ).append(reservation)
-
-    result = []
-
-    for space in spaces:
-        space_reservations = reservations_by_space.get(
-            space.id,
-            [],
-        )
-
-        revenue = sum(
-            float(reservation.total_price or 0)
-            for reservation in space_reservations
-            if get_status_value(reservation.status)
-            in {"confirmed", "completed"}
-        )
-
-        cancelled = sum(
-            1
-            for reservation in space_reservations
-            if get_status_value(reservation.status)
-            == "cancelled"
-        )
-
-        result.append({
-            "id": space.id,
-            "name": space.name,
-            "reservations": len(space_reservations),
-            "revenue": round(revenue, 2),
-            "cancelledReservations": cancelled,
-        })
-
-    result.sort(
-        key=lambda item: item["reservations"],
-        reverse=True,
-    )
-
-    return result
-
-def build_reservation_statuses(
-    reservations: list[Reservation],
-) -> list[dict]:
-    status_labels = {
-        "pending": "Na čekanju",
-        "confirmed": "Potvrđene",
-        "completed": "Završene",
-        "cancelled": "Otkazane",
-    }
-
-    counts = {
-        "pending": 0,
-        "confirmed": 0,
-        "completed": 0,
-        "cancelled": 0,
-    }
-
-    for reservation in reservations:
-        status = get_status_value(
-            reservation.status
-        )
-
-        if status in counts:
-            counts[status] += 1
-
-    total = len(reservations)
-
-    result = []
-
-    for status, label in status_labels.items():
-        count = counts[status]
-
-        percentage = (
-            round((count / total) * 100, 1)
-            if total
-            else 0
-        )
-
-        result.append({
-            "status": status,
-            "label": label,
-            "count": count,
-            "percentage": percentage,
-        })
-
-    return result

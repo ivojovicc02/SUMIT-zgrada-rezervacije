@@ -1062,107 +1062,6 @@ def get_admins(
         .all()
     )
 
-@router.put(
-    "/admins/{admin_id}",
-    response_model=AdminOut,
-)
-def update_admin(
-    admin_id: int,
-    data: AdminUpdate,
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    admin = (
-        db.query(User)
-        .filter(
-            User.id == admin_id,
-            User.role == "admin",
-        )
-        .first()
-    )
-
-    if not admin:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Administrator nije pronađen.",
-        )
-
-    if data.username is not None:
-        username = data.username.strip()
-
-        existing_username = (
-            db.query(User)
-            .filter(
-                func.lower(User.username)
-                == username.lower(),
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_username:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Korisničko ime već postoji.",
-            )
-
-        admin.username = username
-
-    if data.email is not None:
-        email = data.email.strip().lower()
-
-        existing_email = (
-            db.query(User)
-            .filter(
-                func.lower(User.email) == email,
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email adresa već postoji.",
-            )
-
-        admin.email = email
-
-    if data.password:
-        admin.hashed_password = get_password_hash(
-            data.password
-        )
-
-    if data.is_active is not None:
-        if (
-            admin.id == current_admin.id
-            and data.is_active is False
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Ne možete deaktivirati vlastiti račun."
-                ),
-            )
-
-        admin.is_active = data.is_active
-
-    try:
-        db.commit()
-        db.refresh(admin)
-
-        return admin
-
-    except IntegrityError:
-        db.rollback()
-
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Korisničko ime ili email već postoji."
-            ),
-        )
-
 @router.post(
     "/create-admin",
     status_code=status.HTTP_201_CREATED,
@@ -1170,8 +1069,7 @@ def update_admin(
 def create_admin(
     admin_data: AdminCreate,
     db: Session = Depends(get_db),
-    #Ovo odkomentiraj ako zelis zastiti rutu za kreiranje admina natrag..
-    #current_admin: User = Depends(get_current_admin),
+    current_admin: User = Depends(get_current_admin),
 ):
     filters = [User.username == admin_data.username]
 

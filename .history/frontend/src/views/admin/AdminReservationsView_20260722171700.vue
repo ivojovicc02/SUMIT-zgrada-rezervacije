@@ -173,19 +173,6 @@ async function loadSpaces() {
   }
 }
 
-function getSpaceName(reservation) {
-  if (reservation.space?.name) {
-    return reservation.space.name
-  }
-
-  const space = spaces.value.find(
-    (item) =>
-      Number(item.id) === Number(reservation.space_id),
-  )
-
-  return space?.name || 'Nepoznat prostor'
-}
-
 async function loadReservations() {
   loading.value = true
   errorMessage.value = ''
@@ -632,7 +619,7 @@ onMounted(async () => {
                   />
 
                   <span>
-                    {{ getSpaceName(reservation) }}
+                    {{ reservation.space?.name || 'Nepoznat prostor' }}
                   </span>
                 </div>
               </td>
@@ -951,7 +938,7 @@ onMounted(async () => {
                   <dt>Prostor</dt>
                   <dd>
                     {{
-                     getSpaceName(selectedReservation) 
+                      selectedReservation.space?.name || 'Nepoznat prostor'
                     }}
                   </dd>
                 </div>

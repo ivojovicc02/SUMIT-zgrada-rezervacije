@@ -632,7 +632,7 @@ onMounted(async () => {
                   />
 
                   <span>
-                    {{ getSpaceName(reservation) }}
+                    {{ reservation.space?.name || 'Nepoznat prostor' }}
                   </span>
                 </div>
               </td>
@@ -951,7 +951,7 @@ onMounted(async () => {
                   <dt>Prostor</dt>
                   <dd>
                     {{
-                     getSpaceName(selectedReservation) 
+                      selectedReservation.space?.name || 'Nepoznat prostor'
                     }}
                   </dd>
                 </div>

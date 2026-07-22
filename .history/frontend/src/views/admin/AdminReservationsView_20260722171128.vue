@@ -155,35 +155,20 @@ const statistics = computed(() => {
 
 async function loadSpaces() {
   try {
-    const response = await getSpaces()
-
-    spaces.value = Array.isArray(response.data)
-      ? response.data
-      : response.data?.items ?? []
+    const response = await spaceService.getSpaces()
+    spaces.value = Array.isArray(response)
+      ? response
+      : response?.items ?? []
 
     if (!calendarSpace.value && spaces.value.length > 0) {
       calendarSpace.value = spaces.value[0].id
     }
   } catch (error) {
     console.error('Greška pri dohvaćanju prostora:', error)
-
     errorMessage.value =
       error.response?.data?.detail ||
       'Nije moguće dohvatiti prostore.'
   }
-}
-
-function getSpaceName(reservation) {
-  if (reservation.space?.name) {
-    return reservation.space.name
-  }
-
-  const space = spaces.value.find(
-    (item) =>
-      Number(item.id) === Number(reservation.space_id),
-  )
-
-  return space?.name || 'Nepoznat prostor'
 }
 
 async function loadReservations() {
@@ -632,7 +617,7 @@ onMounted(async () => {
                   />
 
                   <span>
-                    {{ getSpaceName(reservation) }}
+                    {{ reservation.space?.name || 'Nepoznat prostor' }}
                   </span>
                 </div>
               </td>
@@ -951,7 +936,7 @@ onMounted(async () => {
                   <dt>Prostor</dt>
                   <dd>
                     {{
-                     getSpaceName(selectedReservation) 
+                      selectedReservation.space?.name || 'Nepoznat prostor'
                     }}
                   </dd>
                 </div>

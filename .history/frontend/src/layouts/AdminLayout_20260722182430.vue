@@ -96,13 +96,6 @@ async function handleLogout() {
           Izvještaji
         </RouterLink>
 
-          <RouterLink
-            to="/admin/users"
-            @click="closeMenu"
-          >
-            Administratori
-          </RouterLink>
-
         <button
           type="button"
           class="admin-dropdown-logout"
@@ -171,7 +164,10 @@ async function handleLogout() {
           <RouterLink to="/admin/izvjestaji">
             Izvještaji
           </RouterLink>
-          <RouterLink to="/admin/users">
+          <RouterLink
+            to="/admin/users"
+          >
+            <span>👤</span>
             Administratori
         </RouterLink>
         </div>

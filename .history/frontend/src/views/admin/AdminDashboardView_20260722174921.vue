@@ -5,7 +5,7 @@ import {
   ref,
 } from 'vue'
 import { useRouter } from 'vue-router'
-import { getDashboard } from '../../services/admin/reservationService'
+import api from '@/services/api'
 
 const router = useRouter()
 
@@ -60,7 +60,7 @@ async function loadDashboard() {
   errorMessage.value = ''
 
   try {
-    const response = await getDashboard()
+    const response = await api.get('/admin/dashboard')
     const data = response.data
 
     statistics.value = {

@@ -1,15 +1,6 @@
 <script setup>
-import {
-  computed,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, ref } from 'vue'
 
-import reservationService from '../../services/admin/reservationService'
-import {
-  getSpaces,
-} from '../../services/admin/spaceService'
 
 const search = ref('')
 const selectedStatus = ref('all')
@@ -17,49 +8,348 @@ const selectedSpace = ref('all')
 const dateFrom = ref('')
 const dateTo = ref('')
 
-const reservations = ref([])
-const spaces = ref([])
-const loading = ref(false)
-const errorMessage = ref('')
-
 const currentView = ref('list')
-const calendarSpace = ref(null)
-const currentWeekStart = ref(getStartOfWeek(new Date()))
+const calendarSpace = ref(1)
+const currentWeekStart = ref(getStartOfWeek(new Date('2026-07-20T00:00:00')))
 const calendarStartHour = 8
 const calendarEndHour = 22
 const hourHeight = 64
 
 const detailsDialog = ref(false)
 const cancelDialog = ref(false)
+
 const selectedReservation = ref(null)
 const cancellationReason = ref('')
 
-let searchTimer = null
-
 const statusOptions = [
-  { title: 'Svi statusi', value: 'all' },
-  { title: 'Na čekanju', value: 'pending' },
-  { title: 'Potvrđene', value: 'confirmed' },
-  { title: 'Otkazane', value: 'cancelled' },
+  {
+    title: 'Svi statusi',
+    value: 'all',
+  },
+  {
+    title: 'Na čekanju',
+    value: 'pending',
+  },
+  {
+    title: 'Potvrđene',
+    value: 'confirmed',
+  },
+  {
+    title: 'Otkazane',
+    value: 'cancelled',
+  },
 ]
 
-// Filtriranje se obavlja na backendu preko query parametara.
-const filteredReservations = computed(() => reservations.value)
+const spaces = [
+  {
+    id: 1,
+    name: 'Konferencijska dvorana A',
+  },
+  {
+    id: 2,
+    name: 'Konferencijska dvorana B',
+  },
+  {
+    id: 3,
+    name: 'Multimedijalna dvorana',
+  },
+  {
+    id: 4,
+    name: 'Ured 204',
+  },
+  {
+    id: 5,
+    name: 'Vanjski prostor',
+  },
+]
+
+const reservations = ref([
+  {
+    id: 1,
+    event_name: 'Radionica umjetne inteligencije',
+    guest_count: 80,
+
+    first_name: 'Ivan',
+    last_name: 'Marić',
+    email: 'ivan.maric@example.com',
+    phone: '+387 63 111 222',
+    company: 'SUMIT',
+
+    start_time: '2026-07-23T09:00:00',
+    end_time: '2026-07-23T12:00:00',
+
+    total_price: 450,
+    status: 'confirmed',
+    notes: 'Potreban pristup prostoru 30 minuta ranije.',
+
+    google_event_id: 'google-event-1',
+
+    space: {
+      id: 1,
+      name: 'Konferencijska dvorana A',
+      capacity: 120,
+    },
+
+    services: [
+      {
+        id: 1,
+        price_at_booking: 30,
+        service: {
+          id: 1,
+          name: 'Projektor',
+        },
+      },
+      {
+        id: 2,
+        price_at_booking: 100,
+        service: {
+          id: 2,
+          name: 'Ozvučenje',
+        },
+      },
+    ],
+
+    recurring_rule: null,
+    created_at: '2026-07-18T14:20:00',
+  },
+
+  {
+    id: 2,
+    event_name: 'Sastanak projektnog tima',
+    guest_count: 12,
+
+    first_name: 'Ana',
+    last_name: 'Kovač',
+    email: 'ana.kovac@example.com',
+    phone: '+387 63 333 444',
+    company: 'Algebra Solutions',
+
+    start_time: '2026-07-23T13:00:00',
+    end_time: '2026-07-23T15:00:00',
+
+    total_price: 120,
+    status: 'pending',
+    notes: null,
+
+    google_event_id: null,
+
+    space: {
+      id: 4,
+      name: 'Ured 204',
+      capacity: 15,
+    },
+
+    services: [],
+
+    recurring_rule: {
+      id: 1,
+      type: 'weekly',
+      interval: 1,
+      end_date: '2026-09-30T00:00:00',
+    },
+
+    created_at: '2026-07-19T10:15:00',
+  },
+
+  {
+    id: 3,
+    event_name: 'Prezentacija diplomskih radova',
+    guest_count: 160,
+
+    first_name: 'Marko',
+    last_name: 'Jurić',
+    email: 'marko.juric@example.com',
+    phone: '+387 63 555 666',
+    company: 'Sveučilište u Mostaru',
+
+    start_time: '2026-07-24T10:00:00',
+    end_time: '2026-07-24T14:00:00',
+
+    total_price: 720,
+    status: 'confirmed',
+    notes: 'Potrebno pripremiti dva mikrofona.',
+
+    google_event_id: 'google-event-3',
+
+    space: {
+      id: 3,
+      name: 'Multimedijalna dvorana',
+      capacity: 200,
+    },
+
+    services: [
+      {
+        id: 3,
+        price_at_booking: 80,
+        service: {
+          id: 2,
+          name: 'Ozvučenje',
+        },
+      },
+      {
+        id: 4,
+        price_at_booking: 150,
+        service: {
+          id: 3,
+          name: 'Tehnička podrška',
+        },
+      },
+    ],
+
+    recurring_rule: null,
+    created_at: '2026-07-20T08:45:00',
+  },
+
+  {
+    id: 4,
+    event_name: 'Poslovna konferencija',
+    guest_count: 250,
+
+    first_name: 'Petra',
+    last_name: 'Babić',
+    email: 'petra.babic@example.com',
+    phone: '+387 63 777 888',
+    company: 'Tech Mostar',
+
+    start_time: '2026-07-25T08:00:00',
+    end_time: '2026-07-25T17:00:00',
+
+    total_price: 1450,
+    status: 'cancelled',
+    notes: 'Cjelodnevni događaj.',
+
+    cancellation_reason:
+      'Organizator je odgodio konferenciju.',
+
+    google_event_id: null,
+
+    space: {
+      id: 2,
+      name: 'Konferencijska dvorana B',
+      capacity: 350,
+    },
+
+    services: [
+      {
+        id: 5,
+        price_at_booking: 300,
+        service: {
+          id: 4,
+          name: 'Catering',
+        },
+      },
+    ],
+
+    recurring_rule: null,
+    created_at: '2026-07-16T09:30:00',
+  },
+
+  {
+    id: 5,
+    event_name: 'Ljetni networking događaj',
+    guest_count: 100,
+
+    first_name: 'Luka',
+    last_name: 'Milić',
+    email: 'luka.milic@example.com',
+    phone: '+387 63 999 000',
+    company: null,
+
+    start_time: '2026-07-27T18:00:00',
+    end_time: '2026-07-27T21:00:00',
+
+    total_price: 580,
+    status: 'confirmed',
+    notes: 'U slučaju kiše potreban rezervni prostor.',
+
+    google_event_id: 'google-event-5',
+
+    space: {
+      id: 5,
+      name: 'Vanjski prostor',
+      capacity: 180,
+    },
+
+    services: [
+      {
+        id: 6,
+        price_at_booking: 100,
+        service: {
+          id: 2,
+          name: 'Ozvučenje',
+        },
+      },
+    ],
+
+    recurring_rule: null,
+    created_at: '2026-07-21T11:10:00',
+  },
+])
+
+const filteredReservations = computed(() => {
+  const normalizedSearch = search.value
+    .trim()
+    .toLowerCase()
+
+  return reservations.value.filter((reservation) => {
+    const matchesSearch =
+      !normalizedSearch ||
+      reservation.event_name
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      reservation.first_name
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      reservation.last_name
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      reservation.email
+        .toLowerCase()
+        .includes(normalizedSearch) ||
+      reservation.space.name
+        .toLowerCase()
+        .includes(normalizedSearch)
+
+    const matchesStatus =
+      selectedStatus.value === 'all' ||
+      reservation.status === selectedStatus.value
+
+    const matchesSpace =
+      selectedSpace.value === 'all' ||
+      Number(reservation.space.id) ===
+        Number(selectedSpace.value)
+
+    const reservationDate = new Date(
+      reservation.start_time,
+    )
+
+    const matchesDateFrom =
+      !dateFrom.value ||
+      reservationDate >=
+        new Date(`${dateFrom.value}T00:00:00`)
+
+    const matchesDateTo =
+      !dateTo.value ||
+      reservationDate <=
+        new Date(`${dateTo.value}T23:59:59`)
+
+    return (
+      matchesSearch &&
+      matchesStatus &&
+      matchesSpace &&
+      matchesDateFrom &&
+      matchesDateTo
+    )
+  })
+})
+
 
 const calendarSpaceOptions = computed(() =>
-  spaces.value.map((space) => ({
+  spaces.map((space) => ({
     title: space.name,
     value: space.id,
   })),
 )
-
-const spaceOptions = computed(() => [
-  { title: 'Svi prostori', value: 'all' },
-  ...spaces.value.map((space) => ({
-    title: space.name,
-    value: space.id,
-  })),
-])
 
 const weekDays = computed(() => {
   return Array.from({ length: 7 }, (_, index) => {
@@ -81,34 +371,23 @@ const weekDays = computed(() => {
   })
 })
 
-const calendarHours = computed(() =>
-  Array.from(
+const calendarHours = computed(() => {
+  return Array.from(
     { length: calendarEndHour - calendarStartHour + 1 },
     (_, index) => calendarStartHour + index,
-  ),
-)
+  )
+})
 
 const calendarReservations = computed(() => {
-  if (!calendarSpace.value) return []
-
-  return reservations.value.filter((reservation) => {
+  return filteredReservations.value.filter((reservation) => {
     if (reservation.status === 'cancelled') return false
 
-    const reservationSpaceId =
-      reservation.space?.id ?? reservation.space_id
-
-    if (
-      Number(reservationSpaceId) !==
-      Number(calendarSpace.value)
-    ) {
+    if (Number(reservation.space.id) !== Number(calendarSpace.value)) {
       return false
     }
 
     const reservationDate = toDateKey(reservation.start_time)
-
-    return weekDays.value.some(
-      (day) => day.key === reservationDate,
-    )
+    return weekDays.value.some((day) => day.key === reservationDate)
   })
 })
 
@@ -137,81 +416,6 @@ const weekRangeLabel = computed(() => {
     year: 'numeric',
   }).format(end)}`
 })
-
-const statistics = computed(() => {
-  const total = reservations.value.length
-  const confirmed = reservations.value.filter(
-    (reservation) => reservation.status === 'confirmed',
-  ).length
-  const pending = reservations.value.filter(
-    (reservation) => reservation.status === 'pending',
-  ).length
-  const cancelled = reservations.value.filter(
-    (reservation) => reservation.status === 'cancelled',
-  ).length
-
-  return { total, confirmed, pending, cancelled }
-})
-
-async function loadSpaces() {
-  try {
-    const response = await getSpaces()
-
-    spaces.value = Array.isArray(response.data)
-      ? response.data
-      : response.data?.items ?? []
-
-    if (!calendarSpace.value && spaces.value.length > 0) {
-      calendarSpace.value = spaces.value[0].id
-    }
-  } catch (error) {
-    console.error('Greška pri dohvaćanju prostora:', error)
-
-    errorMessage.value =
-      error.response?.data?.detail ||
-      'Nije moguće dohvatiti prostore.'
-  }
-}
-
-function getSpaceName(reservation) {
-  if (reservation.space?.name) {
-    return reservation.space.name
-  }
-
-  const space = spaces.value.find(
-    (item) =>
-      Number(item.id) === Number(reservation.space_id),
-  )
-
-  return space?.name || 'Nepoznat prostor'
-}
-
-async function loadReservations() {
-  loading.value = true
-  errorMessage.value = ''
-
-  try {
-    const response = await reservationService.getReservations({
-      status: selectedStatus.value,
-      spaceId: selectedSpace.value,
-      search: search.value,
-      fromDate: dateFrom.value,
-      toDate: dateTo.value,
-    })
-
-    reservations.value = Array.isArray(response)
-      ? response
-      : response?.items ?? []
-  } catch (error) {
-    console.error('Greška pri dohvaćanju rezervacija:', error)
-    reservations.value = []
-    errorMessage.value =
-      error.response?.data?.detail ||
-      'Nije moguće dohvatiti rezervacije.'
-  } finally {
-    loading.value = false
-  }
-}
 
 function getStartOfWeek(dateValue) {
   const date = new Date(dateValue)
@@ -243,8 +447,7 @@ function goToCurrentWeek() {
 
 function getReservationsForDay(dayKey) {
   return calendarReservations.value.filter(
-    (reservation) =>
-      toDateKey(reservation.start_time) === dayKey,
+    (reservation) => toDateKey(reservation.start_time) === dayKey,
   )
 }
 
@@ -270,6 +473,43 @@ function getCalendarEventClass(status) {
   }
 }
 
+const statistics = computed(() => {
+  const total = reservations.value.length
+
+  const confirmed = reservations.value.filter(
+    (reservation) =>
+      reservation.status === 'confirmed',
+  ).length
+
+  const pending = reservations.value.filter(
+    (reservation) =>
+      reservation.status === 'pending',
+  ).length
+
+  const cancelled = reservations.value.filter(
+    (reservation) =>
+      reservation.status === 'cancelled',
+  ).length
+
+  return {
+    total,
+    confirmed,
+    pending,
+    cancelled,
+  }
+})
+
+const spaceOptions = computed(() => [
+  {
+    title: 'Svi prostori',
+    value: 'all',
+  },
+  ...spaces.map((space) => ({
+    title: space.name,
+    value: space.id,
+  })),
+])
+
 function openDetails(reservation) {
   selectedReservation.value = reservation
   detailsDialog.value = true
@@ -286,7 +526,9 @@ function confirmReservation(reservation) {
 }
 
 function cancelReservation() {
-  if (!selectedReservation.value) return
+  if (!selectedReservation.value) {
+    return
+  }
 
   selectedReservation.value.status = 'cancelled'
   selectedReservation.value.cancellation_reason =
@@ -311,6 +553,7 @@ function getStatusLabel(status) {
     confirmed: 'Potvrđena',
     cancelled: 'Otkazana',
   }
+
   return labels[status] || status
 }
 
@@ -320,12 +563,11 @@ function getStatusColor(status) {
     confirmed: 'success',
     cancelled: 'error',
   }
+
   return colors[status] || 'grey'
 }
 
 function formatDate(dateValue) {
-  if (!dateValue) return '—'
-
   return new Intl.DateTimeFormat('hr-HR', {
     day: '2-digit',
     month: '2-digit',
@@ -334,8 +576,6 @@ function formatDate(dateValue) {
 }
 
 function formatTime(dateValue) {
-  if (!dateValue) return '—'
-
   return new Intl.DateTimeFormat('hr-HR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -343,8 +583,6 @@ function formatTime(dateValue) {
 }
 
 function formatDateTime(dateValue) {
-  if (!dateValue) return '—'
-
   return new Intl.DateTimeFormat('hr-HR', {
     day: '2-digit',
     month: '2-digit',
@@ -358,25 +596,8 @@ function formatCurrency(value) {
   return new Intl.NumberFormat('hr-HR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Number(value) || 0)
+  }).format(value)
 }
-
-watch(
-  [selectedStatus, selectedSpace, dateFrom, dateTo],
-  loadReservations,
-)
-
-watch(search, () => {
-  clearTimeout(searchTimer)
-  searchTimer = setTimeout(loadReservations, 400)
-})
-
-onMounted(async () => {
-  await Promise.all([
-    loadSpaces(),
-    loadReservations(),
-  ])
-})
 </script>
 
 <template>
@@ -506,24 +727,6 @@ onMounted(async () => {
       </div>
     </v-card>
 
-    <v-alert
-      v-if="errorMessage"
-      type="error"
-      variant="tonal"
-      closable
-      class="mb-4"
-      @click:close="errorMessage = ''"
-    >
-      {{ errorMessage }}
-    </v-alert>
-
-    <v-progress-linear
-      v-if="loading"
-      indeterminate
-      color="primary"
-      class="mb-3"
-    />
-
     <v-card class="reservations-card" elevation="0">
       <div class="table-header">
         <div>
@@ -632,7 +835,7 @@ onMounted(async () => {
                   />
 
                   <span>
-                    {{ getSpaceName(reservation) }}
+                    {{ reservation.space.name }}
                   </span>
                 </div>
               </td>
@@ -951,7 +1154,7 @@ onMounted(async () => {
                   <dt>Prostor</dt>
                   <dd>
                     {{
-                     getSpaceName(selectedReservation) 
+                      selectedReservation.space.name
                     }}
                   </dd>
                 </div>
@@ -1059,12 +1262,12 @@ onMounted(async () => {
 
             <div
               v-if="
-                (selectedReservation.services?.length || 0)
+                selectedReservation.services.length
               "
               class="services-list"
             >
               <div
-                v-for="item in (selectedReservation.services || [])"
+                v-for="item in selectedReservation.services"
                 :key="item.id"
                 class="service-row"
               >
@@ -1272,463 +1475,3 @@ onMounted(async () => {
   </section>
 </template>
 
-
-<style scoped>
-.reservations-page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.page-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-}
-
-.eyebrow,
-.dialog-eyebrow {
-  margin: 0 0 6px;
-  color: rgb(var(--v-theme-primary));
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.page-header h1 {
-  margin: 0;
-  color: #0f172a;
-  font-size: clamp(28px, 3vw, 36px);
-}
-
-.page-description {
-  margin: 7px 0 0;
-  color: #64748b;
-}
-
-.statistics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 18px;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-}
-
-.stat-card__icon {
-  display: grid;
-  width: 46px;
-  height: 46px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 12px;
-}
-
-.stat-card__icon--blue {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.stat-card__icon--green {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.stat-card__icon--orange {
-  background: #fff7ed;
-  color: #ea580c;
-}
-
-.stat-card__icon--red {
-  background: #fff1f2;
-  color: #e11d48;
-}
-
-.stat-card span,
-.stat-card strong {
-  display: block;
-}
-
-.stat-card span {
-  color: #64748b;
-  font-size: 12px;
-}
-
-.stat-card strong {
-  margin-top: 3px;
-  color: #0f172a;
-  font-size: 24px;
-}
-
-.filters-card,
-.reservations-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 15px;
-}
-
-.filters-card {
-  padding: 18px;
-}
-
-.filters-grid {
-  display: grid;
-  grid-template-columns:
-    minmax(240px, 1.5fr)
-    minmax(150px, 0.8fr)
-    minmax(190px, 1fr)
-    minmax(145px, 0.7fr)
-    minmax(145px, 0.7fr)
-    auto;
-  align-items: center;
-  gap: 13px;
-}
-
-.reservations-card {
-  overflow: hidden;
-}
-
-.table-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 20px 22px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.table-header h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 18px;
-}
-
-.table-header p {
-  margin: 4px 0 0;
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.view-actions {
-  display: flex;
-  gap: 5px;
-}
-
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.reservations-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.reservations-table th {
-  padding: 13px 15px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
-  color: #64748b;
-  font-size: 11px;
-  font-weight: 700;
-  text-align: left;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.reservations-table td {
-  min-width: 110px;
-  padding: 15px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #475569;
-  font-size: 13px;
-  vertical-align: middle;
-}
-
-.reservations-table tbody tr {
-  transition: background 0.2s ease;
-}
-
-.reservations-table tbody tr:hover {
-  background: #f8fafc;
-}
-
-.reservations-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.event-cell,
-.user-cell,
-.date-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-}
-
-.event-cell {
-  min-width: 210px;
-}
-
-.user-cell {
-  min-width: 190px;
-}
-
-.event-cell strong,
-.user-cell strong,
-.date-cell strong {
-  color: #0f172a;
-}
-
-.event-cell span,
-.user-cell span,
-.date-cell span {
-  color: #94a3b8;
-  font-size: 11px;
-}
-
-.space-cell,
-.guest-cell {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.space-cell {
-  min-width: 180px;
-}
-
-.row-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.actions-column {
-  text-align: center !important;
-}
-
-.empty-state {
-  display: flex;
-  min-height: 330px;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 35px;
-  text-align: center;
-}
-
-.empty-state h3 {
-  margin: 15px 0 5px;
-  color: #0f172a;
-}
-
-.empty-state p {
-  margin: 0 0 18px;
-  color: #94a3b8;
-}
-
-.dialog-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 22px 24px;
-}
-
-.dialog-header h2 {
-  margin: 0;
-  color: #0f172a;
-  font-size: 21px;
-}
-
-.details-dialog :deep(.v-card-text) {
-  padding: 22px 24px;
-}
-
-.details-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-}
-
-.details-status-row > span {
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.details-section {
-  padding: 18px;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-}
-
-.details-section h3 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 0 16px;
-  color: #0f172a;
-  font-size: 15px;
-}
-
-.details-section dl {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-}
-
-.details-section dl div {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.details-section dt {
-  color: #94a3b8;
-  font-size: 12px;
-}
-
-.details-section dd {
-  margin: 0;
-  color: #334155;
-  font-size: 13px;
-  font-weight: 600;
-  text-align: right;
-}
-
-.full-width {
-  margin-top: 18px;
-}
-
-.price-value {
-  color: #059669 !important;
-}
-
-.services-list {
-  display: flex;
-  flex-direction: column;
-}
-
-.service-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 9px 0;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.service-row:last-child {
-  border-bottom: 0;
-}
-
-.recurring-box {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-}
-
-.recurring-box p,
-.details-section > p {
-  margin: 0;
-  color: #475569;
-  font-size: 13px;
-  line-height: 1.65;
-}
-
-.muted-text {
-  color: #94a3b8 !important;
-}
-
-.dialog-actions {
-  padding: 14px 20px;
-}
-
-.cancel-dialog-title {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-
-.calendar-view { background: #fff; }
-.calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px 20px; border-bottom:1px solid #e2e8f0; }
-.calendar-navigation { display:flex; align-items:center; gap:8px; }
-.calendar-navigation strong { margin-left:8px; color:#0f172a; font-size:14px; text-transform:capitalize; }
-.calendar-space-select { max-width:290px; }
-.calendar-scroll { overflow:auto; max-height:760px; }
-.calendar-grid { display:grid; grid-template-columns:76px repeat(7,minmax(145px,1fr)); min-width:1090px; background:#fff; }
-.calendar-corner { position:sticky; top:0; left:0; z-index:5; min-height:76px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-day-header { position:sticky; top:0; z-index:4; display:flex; min-height:76px; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-day-header span { color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; }
-.calendar-day-header strong { margin-top:2px; color:#0f172a; font-size:22px; line-height:1; }
-.calendar-day-header small { margin-top:3px; color:#94a3b8; font-size:10px; text-transform:capitalize; }
-.calendar-day-header--today strong { display:grid; width:34px; height:34px; place-items:center; border-radius:50%; background:rgb(var(--v-theme-primary)); color:#fff; }
-.calendar-time-column { position:sticky; left:0; z-index:3; border-right:1px solid #e2e8f0; background:#fff; }
-.calendar-time-label { padding:7px 10px 0 0; border-bottom:1px solid #f1f5f9; color:#94a3b8; font-size:11px; text-align:right; }
-.calendar-day-column { position:relative; overflow:hidden; border-right:1px solid #e2e8f0; background:#fff; }
-.calendar-day-column--today { background:#f8fbff; }
-.calendar-hour-line { position:absolute; right:0; left:0; border-bottom:1px solid #f1f5f9; pointer-events:none; }
-.calendar-event { position:absolute; right:5px; left:5px; z-index:2; display:flex; min-height:30px; flex-direction:column; align-items:flex-start; overflow:hidden; padding:6px 8px; border:0; border-left:4px solid; border-radius:7px; cursor:pointer; text-align:left; transition:transform .15s ease,box-shadow .15s ease; }
-.calendar-event:hover { z-index:3; transform:translateY(-1px); box-shadow:0 6px 16px rgb(15 23 42 / 14%); }
-.calendar-event strong { width:100%; overflow:hidden; font-size:11px; line-height:1.25; text-overflow:ellipsis; white-space:nowrap; }
-.calendar-event span,.calendar-event small { margin-top:2px; font-size:10px; line-height:1.2; }
-.calendar-event--confirmed { border-left-color:#2563eb; background:#dbeafe; color:#1e3a8a; }
-.calendar-event--pending { border-left-color:#ea580c; background:#ffedd5; color:#9a3412; }
-.calendar-empty-state { display:flex; align-items:center; justify-content:center; gap:14px; padding:24px; border-top:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-empty-state strong { color:#334155; font-size:14px; }
-.calendar-empty-state p { margin:3px 0 0; color:#94a3b8; font-size:12px; }
-
-@media (max-width: 1280px) {
-  .statistics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .filters-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 800px) {
-  .calendar-toolbar { align-items:stretch; flex-direction:column; }
-  .calendar-space-select { max-width:none; }
-  .calendar-navigation { flex-wrap:wrap; }
-  .calendar-navigation strong { width:100%; margin:4px 0 0; }
-
-  .page-header {
-    flex-direction: column;
-  }
-
-  .details-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .filters-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 520px) {
-  .statistics-grid,
-  .filters-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .details-status-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-</style>

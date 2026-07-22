@@ -1170,8 +1170,7 @@ def update_admin(
 def create_admin(
     admin_data: AdminCreate,
     db: Session = Depends(get_db),
-    #Ovo odkomentiraj ako zelis zastiti rutu za kreiranje admina natrag..
-    #current_admin: User = Depends(get_current_admin),
+    current_admin: User = Depends(get_current_admin),
 ):
     filters = [User.username == admin_data.username]
 

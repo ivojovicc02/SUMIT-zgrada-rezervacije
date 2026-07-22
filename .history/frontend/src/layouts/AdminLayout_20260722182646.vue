@@ -96,13 +96,6 @@ async function handleLogout() {
           Izvještaji
         </RouterLink>
 
-          <RouterLink
-            to="/admin/users"
-            @click="closeMenu"
-          >
-            Administratori
-          </RouterLink>
-
         <button
           type="button"
           class="admin-dropdown-logout"

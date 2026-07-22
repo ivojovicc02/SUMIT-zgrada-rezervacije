@@ -97,11 +97,11 @@ async function handleLogout() {
         </RouterLink>
 
           <RouterLink
-            to="/admin/users"
-            @click="closeMenu"
-          >
-            Administratori
-          </RouterLink>
+          to="/admin/users"
+          @click="closeMenu"
+        >
+          Administratori
+        </RouterLink>
 
         <button
           type="button"

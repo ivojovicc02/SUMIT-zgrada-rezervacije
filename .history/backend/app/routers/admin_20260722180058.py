@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import os
-from typing import List, Optional,Annotated,Literal
+from typing import List, Optional,Annotated
+import shutil
 from pathlib import Path
 from uuid import uuid4
 from fastapi import (
@@ -11,11 +12,6 @@ from fastapi import (
     HTTPException,
     Query,
     status,
-)
-from app.schemas.user import (
-    AdminCreate,
-    AdminOut,
-    AdminUpdate,
 )
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import func, or_
@@ -1046,122 +1042,6 @@ def get_me(
         "username": current_admin.username,
         "role": current_admin.role,
     }
-    
-@router.get(
-    "/admins",
-    response_model=List[AdminOut],
-)
-def get_admins(
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    return (
-        db.query(User)
-        .filter(User.role == "admin")
-        .order_by(User.username.asc())
-        .all()
-    )
-
-@router.put(
-    "/admins/{admin_id}",
-    response_model=AdminOut,
-)
-def update_admin(
-    admin_id: int,
-    data: AdminUpdate,
-    db: Session = Depends(get_db),
-    current_admin: User = Depends(get_current_admin),
-):
-    admin = (
-        db.query(User)
-        .filter(
-            User.id == admin_id,
-            User.role == "admin",
-        )
-        .first()
-    )
-
-    if not admin:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Administrator nije pronađen.",
-        )
-
-    if data.username is not None:
-        username = data.username.strip()
-
-        existing_username = (
-            db.query(User)
-            .filter(
-                func.lower(User.username)
-                == username.lower(),
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_username:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Korisničko ime već postoji.",
-            )
-
-        admin.username = username
-
-    if data.email is not None:
-        email = data.email.strip().lower()
-
-        existing_email = (
-            db.query(User)
-            .filter(
-                func.lower(User.email) == email,
-                User.id != admin_id,
-            )
-            .first()
-        )
-
-        if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Email adresa već postoji.",
-            )
-
-        admin.email = email
-
-    if data.password:
-        admin.hashed_password = get_password_hash(
-            data.password
-        )
-
-    if data.is_active is not None:
-        if (
-            admin.id == current_admin.id
-            and data.is_active is False
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=(
-                    "Ne možete deaktivirati vlastiti račun."
-                ),
-            )
-
-        admin.is_active = data.is_active
-
-    try:
-        db.commit()
-        db.refresh(admin)
-
-        return admin
-
-    except IntegrityError:
-        db.rollback()
-
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                "Korisničko ime ili email već postoji."
-            ),
-        )
 
 @router.post(
     "/create-admin",
@@ -1170,8 +1050,7 @@ def update_admin(
 def create_admin(
     admin_data: AdminCreate,
     db: Session = Depends(get_db),
-    #Ovo odkomentiraj ako zelis zastiti rutu za kreiranje admina natrag..
-    #current_admin: User = Depends(get_current_admin),
+    current_admin: User = Depends(get_current_admin),
 ):
     filters = [User.username == admin_data.username]
 
@@ -2369,113 +2248,5 @@ def build_monthly_data(
             item["revenue"],
             2,
         )
-
-    return result
-
-def build_space_performance(
-    db: Session,
-    reservations: list[Reservation],
-    selected_space_id: Optional[int] = None,
-) -> list[dict]:
-    spaces_query = db.query(Space)
-
-    if selected_space_id is not None:
-        spaces_query = spaces_query.filter(
-            Space.id == selected_space_id
-        )
-
-    spaces = spaces_query.order_by(
-        Space.name.asc()
-    ).all()
-
-    reservations_by_space = {}
-
-    for reservation in reservations:
-        reservations_by_space.setdefault(
-            reservation.space_id,
-            [],
-        ).append(reservation)
-
-    result = []
-
-    for space in spaces:
-        space_reservations = reservations_by_space.get(
-            space.id,
-            [],
-        )
-
-        revenue = sum(
-            float(reservation.total_price or 0)
-            for reservation in space_reservations
-            if get_status_value(reservation.status)
-            in {"confirmed", "completed"}
-        )
-
-        cancelled = sum(
-            1
-            for reservation in space_reservations
-            if get_status_value(reservation.status)
-            == "cancelled"
-        )
-
-        result.append({
-            "id": space.id,
-            "name": space.name,
-            "reservations": len(space_reservations),
-            "revenue": round(revenue, 2),
-            "cancelledReservations": cancelled,
-        })
-
-    result.sort(
-        key=lambda item: item["reservations"],
-        reverse=True,
-    )
-
-    return result
-
-def build_reservation_statuses(
-    reservations: list[Reservation],
-) -> list[dict]:
-    status_labels = {
-        "pending": "Na čekanju",
-        "confirmed": "Potvrđene",
-        "completed": "Završene",
-        "cancelled": "Otkazane",
-    }
-
-    counts = {
-        "pending": 0,
-        "confirmed": 0,
-        "completed": 0,
-        "cancelled": 0,
-    }
-
-    for reservation in reservations:
-        status = get_status_value(
-            reservation.status
-        )
-
-        if status in counts:
-            counts[status] += 1
-
-    total = len(reservations)
-
-    result = []
-
-    for status, label in status_labels.items():
-        count = counts[status]
-
-        percentage = (
-            round((count / total) * 100, 1)
-            if total
-            else 0
-        )
-
-        result.append({
-            "status": status,
-            "label": label,
-            "count": count,
-            "percentage": percentage,
-        })
 
     return result

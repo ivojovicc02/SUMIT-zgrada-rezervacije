@@ -60,7 +60,7 @@ async function loadDashboard() {
   errorMessage.value = ''
 
   try {
-    const response = await getDashboard()
+    const response = await api.get('/admin/dashboard')
     const data = response.data
 
     statistics.value = {

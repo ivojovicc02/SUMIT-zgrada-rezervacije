@@ -951,7 +951,7 @@ onMounted(async () => {
                   <dt>Prostor</dt>
                   <dd>
                     {{
-                     getSpaceName(selectedReservation) 
+                      {{ getSpaceName(selectedReservation) }}
                     }}
                   </dd>
                 </div>

@@ -121,3 +121,5 @@ export function setPrimarySpaceImage(
     `/admin/spaces/${spaceId}/images/${imageId}/primary`,
   )
 }
+
+export default spaceService

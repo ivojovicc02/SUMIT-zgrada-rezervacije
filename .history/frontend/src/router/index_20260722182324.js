@@ -21,7 +21,6 @@ import AdminDashboardView from '../views/admin/AdminDashboardView.vue'
 import AdminSpacesView from '../views/admin/AdminSpacesView.vue'
 import AdminReservationsView from '../views/admin/AdminReservationsView.vue'
 import AdminReportsView from '../views/admin/AdminReportsView.vue'
-import AdminUsersView from '../views/admin/AdminUsersView.vue'
 
 const routes = [
   {
@@ -73,7 +72,10 @@ const routes = [
       {
           path: 'users',
           name: 'admin-users',
-          component: AdminUsersView,
+          component: () =>
+            import(
+              '../views/admin/AdminUsersView.vue'
+            ),
         },
     ],
   },

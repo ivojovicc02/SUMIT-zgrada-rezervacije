@@ -22,14 +22,3 @@ class AdminUpdate(BaseModel):
         min_length=8,
     )
     is_active: Optional[bool] = None
-    
-class AdminOut(BaseModel):
-    id: int
-    username: str
-    email: Optional[EmailStr]
-    role: str
-    is_active: bool
-
-    model_config = {
-        "from_attributes": True,
-    }
