@@ -7,13 +7,6 @@ const selectedSpace = ref('all')
 const dateFrom = ref('')
 const dateTo = ref('')
 
-const currentView = ref('list')
-const calendarSpace = ref(1)
-const currentWeekStart = ref(getStartOfWeek(new Date('2026-07-20T00:00:00')))
-const calendarStartHour = 8
-const calendarEndHour = 22
-const hourHeight = 64
-
 const detailsDialog = ref(false)
 const cancelDialog = ref(false)
 
@@ -342,136 +335,6 @@ const filteredReservations = computed(() => {
   })
 })
 
-
-const calendarSpaceOptions = computed(() =>
-  spaces.map((space) => ({
-    title: space.name,
-    value: space.id,
-  })),
-)
-
-const weekDays = computed(() => {
-  return Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(currentWeekStart.value)
-    date.setDate(date.getDate() + index)
-
-    return {
-      date,
-      key: toDateKey(date),
-      shortName: new Intl.DateTimeFormat('hr-HR', {
-        weekday: 'short',
-      }).format(date),
-      dayNumber: date.getDate(),
-      monthName: new Intl.DateTimeFormat('hr-HR', {
-        month: 'short',
-      }).format(date),
-      isToday: toDateKey(date) === toDateKey(new Date()),
-    }
-  })
-})
-
-const calendarHours = computed(() => {
-  return Array.from(
-    { length: calendarEndHour - calendarStartHour + 1 },
-    (_, index) => calendarStartHour + index,
-  )
-})
-
-const calendarReservations = computed(() => {
-  return filteredReservations.value.filter((reservation) => {
-    if (reservation.status === 'cancelled') return false
-
-    if (Number(reservation.space.id) !== Number(calendarSpace.value)) {
-      return false
-    }
-
-    const reservationDate = toDateKey(reservation.start_time)
-    return weekDays.value.some((day) => day.key === reservationDate)
-  })
-})
-
-const weekRangeLabel = computed(() => {
-  const start = new Date(currentWeekStart.value)
-  const end = new Date(currentWeekStart.value)
-  end.setDate(end.getDate() + 6)
-
-  const sameMonth =
-    start.getMonth() === end.getMonth() &&
-    start.getFullYear() === end.getFullYear()
-
-  if (sameMonth) {
-    return `${start.getDate()}. – ${end.getDate()}. ${new Intl.DateTimeFormat(
-      'hr-HR',
-      { month: 'long', year: 'numeric' },
-    ).format(end)}`
-  }
-
-  return `${new Intl.DateTimeFormat('hr-HR', {
-    day: 'numeric',
-    month: 'short',
-  }).format(start)} – ${new Intl.DateTimeFormat('hr-HR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(end)}`
-})
-
-function getStartOfWeek(dateValue) {
-  const date = new Date(dateValue)
-  const day = date.getDay()
-  const difference = day === 0 ? -6 : 1 - day
-
-  date.setDate(date.getDate() + difference)
-  date.setHours(0, 0, 0, 0)
-  return date
-}
-
-function toDateKey(dateValue) {
-  const date = new Date(dateValue)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function changeWeek(offset) {
-  const nextWeek = new Date(currentWeekStart.value)
-  nextWeek.setDate(nextWeek.getDate() + offset * 7)
-  currentWeekStart.value = nextWeek
-}
-
-function goToCurrentWeek() {
-  currentWeekStart.value = getStartOfWeek(new Date())
-}
-
-function getReservationsForDay(dayKey) {
-  return calendarReservations.value.filter(
-    (reservation) => toDateKey(reservation.start_time) === dayKey,
-  )
-}
-
-function getCalendarEventStyle(reservation) {
-  const start = new Date(reservation.start_time)
-  const end = new Date(reservation.end_time)
-  const startMinutes = start.getHours() * 60 + start.getMinutes()
-  const endMinutes = end.getHours() * 60 + end.getMinutes()
-  const calendarStartMinutes = calendarStartHour * 60
-  const calendarEndMinutes = calendarEndHour * 60
-  const visibleStart = Math.max(startMinutes, calendarStartMinutes)
-  const visibleEnd = Math.min(endMinutes, calendarEndMinutes)
-  const top = ((visibleStart - calendarStartMinutes) / 60) * hourHeight
-  const height = Math.max(((visibleEnd - visibleStart) / 60) * hourHeight, 30)
-
-  return { top: `${top}px`, height: `${height}px` }
-}
-
-function getCalendarEventClass(status) {
-  return {
-    'calendar-event--confirmed': status === 'confirmed',
-    'calendar-event--pending': status === 'pending',
-  }
-}
-
 const statistics = computed(() => {
   const total = reservations.value.length
 
@@ -603,6 +466,9 @@ function formatCurrency(value) {
   <section class="reservations-page">
     <header class="page-header">
       <div>
+        <p class="eyebrow">
+          Upravljanje rezervacijama
+        </p>
 
         <h1>Rezervacije</h1>
 
@@ -729,45 +595,34 @@ function formatCurrency(value) {
     <v-card class="reservations-card" elevation="0">
       <div class="table-header">
         <div>
-          <h2>{{ currentView === 'list' ? 'Popis rezervacija' : 'Tjedni kalendar' }}</h2>
+          <h2>Popis rezervacija</h2>
 
-          <p v-if="currentView === 'list'">
-            Prikazano {{ filteredReservations.length }} od {{ reservations.length }} rezervacija
+          <p>
+            Prikazano
+            {{ filteredReservations.length }}
+            od
+            {{ reservations.length }}
+            rezervacija
           </p>
-          <p v-else>{{ weekRangeLabel }}</p>
         </div>
 
         <div class="view-actions">
-          <v-tooltip text="Prikaz liste">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-format-list-bulleted"
-                :variant="currentView === 'list' ? 'tonal' : 'text'"
-                :color="currentView === 'list' ? 'primary' : undefined"
-                size="small"
-                @click="currentView = 'list'"
-              />
-            </template>
-          </v-tooltip>
+          <v-btn
+            icon="mdi-format-list-bulleted"
+            variant="tonal"
+            size="small"
+          />
 
-          <v-tooltip text="Kalendarski prikaz">
-            <template #activator="{ props }">
-              <v-btn
-                v-bind="props"
-                icon="mdi-calendar-week"
-                :variant="currentView === 'calendar' ? 'tonal' : 'text'"
-                :color="currentView === 'calendar' ? 'primary' : undefined"
-                size="small"
-                @click="currentView = 'calendar'"
-              />
-            </template>
-          </v-tooltip>
+          <v-btn
+            icon="mdi-calendar-week"
+            variant="text"
+            size="small"
+          />
         </div>
       </div>
 
       <div
-        v-if="currentView === 'list' && filteredReservations.length"
+        v-if="filteredReservations.length"
         class="table-wrapper"
       >
         <table class="reservations-table">
@@ -968,99 +823,7 @@ function formatCurrency(value) {
         </table>
       </div>
 
-      <div v-if="currentView === 'calendar'" class="calendar-view">
-        <div class="calendar-toolbar">
-          <div class="calendar-navigation">
-            <v-btn icon="mdi-chevron-left" variant="text" size="small" @click="changeWeek(-1)" />
-            <v-btn variant="tonal" size="small" @click="goToCurrentWeek">Danas</v-btn>
-            <v-btn icon="mdi-chevron-right" variant="text" size="small" @click="changeWeek(1)" />
-            <strong>{{ weekRangeLabel }}</strong>
-          </div>
-
-          <v-select
-            v-model="calendarSpace"
-            :items="calendarSpaceOptions"
-            label="Prostor"
-            variant="outlined"
-            density="compact"
-            hide-details
-            class="calendar-space-select"
-          />
-        </div>
-
-        <div class="calendar-scroll">
-          <div class="calendar-grid">
-            <div class="calendar-corner" />
-
-            <div
-              v-for="day in weekDays"
-              :key="day.key"
-              class="calendar-day-header"
-              :class="{ 'calendar-day-header--today': day.isToday }"
-            >
-              <span>{{ day.shortName }}</span>
-              <strong>{{ day.dayNumber }}</strong>
-              <small>{{ day.monthName }}</small>
-            </div>
-
-            <div class="calendar-time-column">
-              <div
-                v-for="hour in calendarHours"
-                :key="hour"
-                class="calendar-time-label"
-                :style="{ height: `${hourHeight}px` }"
-              >
-                {{ String(hour).padStart(2, '0') }}:00
-              </div>
-            </div>
-
-            <div
-              v-for="day in weekDays"
-              :key="`column-${day.key}`"
-              class="calendar-day-column"
-              :class="{ 'calendar-day-column--today': day.isToday }"
-              :style="{ height: `${(calendarEndHour - calendarStartHour + 1) * hourHeight}px` }"
-            >
-              <div
-                v-for="hour in calendarHours"
-                :key="`${day.key}-${hour}`"
-                class="calendar-hour-line"
-                :style="{
-                  top: `${(hour - calendarStartHour) * hourHeight}px`,
-                  height: `${hourHeight}px`,
-                }"
-              />
-
-              <button
-                v-for="reservation in getReservationsForDay(day.key)"
-                :key="reservation.id"
-                type="button"
-                class="calendar-event"
-                :class="getCalendarEventClass(reservation.status)"
-                :style="getCalendarEventStyle(reservation)"
-                @click="openDetails(reservation)"
-              >
-                <strong>{{ reservation.event_name }}</strong>
-                <span>{{ formatTime(reservation.start_time) }} – {{ formatTime(reservation.end_time) }}</span>
-                <small>{{ reservation.first_name }} {{ reservation.last_name }}</small>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="!calendarReservations.length" class="calendar-empty-state">
-          <v-icon icon="mdi-calendar-blank-outline" size="44" color="grey-lighten-1" />
-          <div>
-            <strong>Nema rezervacija u ovom tjednu</strong>
-            <p>Za odabrani prostor nema aktivnih rezervacija u prikazanom razdoblju.</p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        v-else-if="currentView === 'list' && !filteredReservations.length"
-        class="empty-state"
-      >
+      <div v-else class="empty-state">
         <v-icon
           icon="mdi-calendar-remove-outline"
           size="64"
@@ -1862,35 +1625,6 @@ function formatCurrency(value) {
   gap: 9px;
 }
 
-
-.calendar-view { background: #fff; }
-.calendar-toolbar { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:16px 20px; border-bottom:1px solid #e2e8f0; }
-.calendar-navigation { display:flex; align-items:center; gap:8px; }
-.calendar-navigation strong { margin-left:8px; color:#0f172a; font-size:14px; text-transform:capitalize; }
-.calendar-space-select { max-width:290px; }
-.calendar-scroll { overflow:auto; max-height:760px; }
-.calendar-grid { display:grid; grid-template-columns:76px repeat(7,minmax(145px,1fr)); min-width:1090px; background:#fff; }
-.calendar-corner { position:sticky; top:0; left:0; z-index:5; min-height:76px; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-day-header { position:sticky; top:0; z-index:4; display:flex; min-height:76px; flex-direction:column; align-items:center; justify-content:center; border-right:1px solid #e2e8f0; border-bottom:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-day-header span { color:#64748b; font-size:11px; font-weight:700; text-transform:uppercase; }
-.calendar-day-header strong { margin-top:2px; color:#0f172a; font-size:22px; line-height:1; }
-.calendar-day-header small { margin-top:3px; color:#94a3b8; font-size:10px; text-transform:capitalize; }
-.calendar-day-header--today strong { display:grid; width:34px; height:34px; place-items:center; border-radius:50%; background:rgb(var(--v-theme-primary)); color:#fff; }
-.calendar-time-column { position:sticky; left:0; z-index:3; border-right:1px solid #e2e8f0; background:#fff; }
-.calendar-time-label { padding:7px 10px 0 0; border-bottom:1px solid #f1f5f9; color:#94a3b8; font-size:11px; text-align:right; }
-.calendar-day-column { position:relative; overflow:hidden; border-right:1px solid #e2e8f0; background:#fff; }
-.calendar-day-column--today { background:#f8fbff; }
-.calendar-hour-line { position:absolute; right:0; left:0; border-bottom:1px solid #f1f5f9; pointer-events:none; }
-.calendar-event { position:absolute; right:5px; left:5px; z-index:2; display:flex; min-height:30px; flex-direction:column; align-items:flex-start; overflow:hidden; padding:6px 8px; border:0; border-left:4px solid; border-radius:7px; cursor:pointer; text-align:left; transition:transform .15s ease,box-shadow .15s ease; }
-.calendar-event:hover { z-index:3; transform:translateY(-1px); box-shadow:0 6px 16px rgb(15 23 42 / 14%); }
-.calendar-event strong { width:100%; overflow:hidden; font-size:11px; line-height:1.25; text-overflow:ellipsis; white-space:nowrap; }
-.calendar-event span,.calendar-event small { margin-top:2px; font-size:10px; line-height:1.2; }
-.calendar-event--confirmed { border-left-color:#2563eb; background:#dbeafe; color:#1e3a8a; }
-.calendar-event--pending { border-left-color:#ea580c; background:#ffedd5; color:#9a3412; }
-.calendar-empty-state { display:flex; align-items:center; justify-content:center; gap:14px; padding:24px; border-top:1px solid #e2e8f0; background:#f8fafc; }
-.calendar-empty-state strong { color:#334155; font-size:14px; }
-.calendar-empty-state p { margin:3px 0 0; color:#94a3b8; font-size:12px; }
-
 @media (max-width: 1280px) {
   .statistics-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1902,11 +1636,6 @@ function formatCurrency(value) {
 }
 
 @media (max-width: 800px) {
-  .calendar-toolbar { align-items:stretch; flex-direction:column; }
-  .calendar-space-select { max-width:none; }
-  .calendar-navigation { flex-wrap:wrap; }
-  .calendar-navigation strong { width:100%; margin:4px 0 0; }
-
   .page-header {
     flex-direction: column;
   }
