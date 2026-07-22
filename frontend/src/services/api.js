@@ -28,10 +28,6 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('admin_token')
 
-      /*
-       * Ne preusmjeravamo tijekom samog login zahtjeva,
-       * jer 401 na loginu znači pogrešne podatke.
-       */
       const isLoginRequest =
         error.config?.url === '/admin/login'
 

@@ -1,0 +1,1 @@
+<script setup>import PublicHeader from '../components/public/PublicHeader.vue';import PublicFooter from '../components/public/PublicFooter.vue'</script><template><div class="public-app"><PublicHeader/><main class="public-main"><RouterView/></main><PublicFooter/></div></template>

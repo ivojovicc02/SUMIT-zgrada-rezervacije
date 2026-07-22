@@ -1,0 +1,1 @@
+import {publicSpaces} from '../../data/publicSpaces';const wait=(ms=200)=>new Promise(r=>setTimeout(r,ms));export async function getPublicSpaces(){await wait();return [...publicSpaces]}export async function getPublicSpace(id){await wait();return publicSpaces.find(s=>s.id===Number(id))||null}

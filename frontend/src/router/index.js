@@ -9,7 +9,12 @@ import {
   isAuthenticated,
 } from '../services/admin/authService'
 
+import PublicLayout from '../layouts/PublicLayout.vue'
 import HomeView from '../views/public/HomeView.vue'
+import SpacesView from '../views/public/SpacesView.vue'
+import SpaceDetailsView from '../views/public/SpaceDetailsView.vue'
+import ReservationView from '../views/public/ReservationView.vue'
+import ReservationSuccessView from '../views/public/ReservationSuccessView.vue'
 import AdminLoginView from '../views/admin/AdminLoginView.vue'
 import AdminLayout from '../layouts/AdminLayout.vue'
 import AdminDashboardView from '../views/admin/AdminDashboardView.vue'
@@ -20,8 +25,14 @@ import AdminReportsView from '../views/admin/AdminReportsView.vue'
 const routes = [
   {
     path: '/',
-    name: 'home',
-    component: HomeView,
+    component: PublicLayout,
+    children: [
+      { path: '', name: 'home', component: HomeView },
+      { path: 'prostori', name: 'public-spaces', component: SpacesView },
+      { path: 'prostori/:id', name: 'public-space-details', component: SpaceDetailsView },
+      { path: 'rezervacija', name: 'public-reservation', component: ReservationView },
+      { path: 'rezervacija/potvrda', name: 'public-reservation-success', component: ReservationSuccessView },
+    ],
   },
   {
     path: '/admin/login',

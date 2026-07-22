@@ -1,16 +1,8 @@
-<template>
-  <main class="home-page">
-    <h1>SUMIT rezervacije</h1>
-    <p>Javna početna stranica sustava.</p>
-
-    <RouterLink to="/admin/login">
-      Administratorska prijava
-    </RouterLink>
-  </main>
-</template>
-
-<style scoped>
-.home-page {
-  padding: 40px;
-}
-</style>
+<script setup>
+import { onMounted, ref } from 'vue'
+import PublicSpaceCard from '../../components/public/PublicSpaceCard.vue'
+import { getPublicSpaces } from '../../services/public/publicSpaceService'
+const spaces=ref([])
+onMounted(async()=>{spaces.value=(await getPublicSpaces()).slice(0,3)})
+</script>
+<template><div><section class="public-hero"><div class="public-container public-hero__grid"><div><span class="public-eyebrow">SUMIT ZGRADA MOSTAR</span><h1>Pronađite prostor za rad, sastanak ili događaj</h1><p>Pregledajte dostupne urede i dvorane, odaberite termin i pošaljite rezervaciju kroz nekoliko jednostavnih koraka.</p><div class="public-hero__actions"><v-btn to="/rezervacija" color="primary" size="large">Rezerviraj prostor</v-btn><v-btn to="/prostori" variant="outlined" size="large">Pregled prostora</v-btn></div></div><div class="public-hero__visual"><img src="/spaces/conference.svg" alt="Konferencijski prostor"></div></div></section><section class="public-section"><div class="public-container"><div class="public-section-heading"><span class="public-eyebrow">IZDVOJENO</span><h2>Popularni prostori</h2><p>Odaberite prostor koji odgovara broju osoba i vrsti događaja.</p></div><div class="public-card-grid"><PublicSpaceCard v-for="space in spaces" :key="space.id" :space="space"/></div></div></section><section class="public-section public-section--muted"><div class="public-container"><div class="public-section-heading"><span class="public-eyebrow">KAKO RADI</span><h2>Rezervacija u četiri koraka</h2></div><div class="public-steps"><div v-for="(step,i) in ['Odaberite prostor','Odaberite termin','Unesite podatke','Potvrdite rezervaciju']" :key="step" class="public-step"><span>{{i+1}}</span><h3>{{step}}</h3><p>{{['Pregledajte ponudu i detalje prostora.','Provjerite datum i vrijeme korištenja.','Dodajte kontakt i potrebne usluge.','Pregledajte sažetak prije slanja.'][i]}}</p></div></div></div></section></div></template>
