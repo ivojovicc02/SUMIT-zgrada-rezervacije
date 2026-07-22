@@ -227,7 +227,6 @@ async function submitForm() {
 } finally {
   isSaving.value = false
 }
-}
 
 async function toggleAdminStatus(admin) {
   const nextStatus = !admin.is_active

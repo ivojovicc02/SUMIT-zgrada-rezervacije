@@ -1266,12 +1266,6 @@ def login(
         .filter(User.username == form_data.username)
         .first()
     )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=403,
-            detail="Račun je deaktiviran."
-    )
 
     if user is None:
         raise HTTPException(

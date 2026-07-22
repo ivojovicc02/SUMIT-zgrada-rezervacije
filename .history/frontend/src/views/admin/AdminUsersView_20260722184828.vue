@@ -198,35 +198,35 @@ async function submitForm() {
   }
 
   try {
-  if (editingAdmin.value) {
-    await updateAdmin(
-      editingAdmin.value.id,
-      payload,
+    if (editingAdmin.value) {
+      await updateAdmin(
+        editingAdmin.value.id,
+        payload,
+      )
+
+      successMessage.value =
+        'Administrator je uspješno ažuriran.'
+    } else {
+      await createAdmin(payload)
+
+      successMessage.value =
+        'Administrator je uspješno kreiran.'
+    }
+
+    closeModal()
+    await loadAdmins()
+  } catch (error) {
+    console.error(
+      'Greška pri spremanju administratora:',
+      error,
     )
 
-    successMessage.value =
-      'Administrator je uspješno ažuriran.'
-  } else {
-    await createAdmin(payload)
-
-    successMessage.value =
-      'Administrator je uspješno kreiran.'
+    errorMessage.value =
+      error.response?.data?.detail ||
+      'Nije moguće spremiti administratora.'
+  } finally {
+    isSaving.value = false
   }
-
-  closeModal(true)
-  await loadAdmins()
-} catch (error) {
-  console.error(
-    'Greška pri spremanju administratora:',
-    error,
-  )
-
-  errorMessage.value =
-    error.response?.data?.detail ||
-    'Nije moguće spremiti administratora.'
-} finally {
-  isSaving.value = false
-}
 }
 
 async function toggleAdminStatus(admin) {
